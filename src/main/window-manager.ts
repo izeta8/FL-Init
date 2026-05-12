@@ -1,5 +1,6 @@
 import { BrowserWindow, Menu } from 'electron';
 import path from 'path';
+import { getConfiguration } from './config-manager';
 
 let mainWindow: BrowserWindow | null = null;
 let isRestoringWindow = false;
@@ -25,7 +26,7 @@ const PRELOAD_PATH = isDev
 
 const RENDERER_HTML_PATH = isDev
   ? path.join(__dirname, '../renderer/index.html')
-  : path.join(process.resourcesPath, 'app.asar.unpacked', 'dist/renderer/index.html');
+  : path.join(process.resourcesPath, 'app.asar', 'dist/renderer/index.html');
 
 export function createMainWindow(): BrowserWindow {
   mainWindow = new BrowserWindow({
@@ -40,7 +41,6 @@ export function createMainWindow(): BrowserWindow {
   });
 
   mainWindow.loadFile(RENDERER_HTML_PATH);
-
   mainWindow.maximize();
 
   setupWindowEvents(mainWindow);
@@ -72,7 +72,14 @@ function setupApplicationMenu(win: BrowserWindow): void {
     {
       label: 'Settings',
       submenu: [
-        { label: 'Configuration', click() { win.webContents.send('show-modal'); } },
+        {
+          label: 'Configuration',
+          click() {
+            getConfiguration().then((config) => {
+              win.webContents.send('show-modal', config);
+            });
+          }
+        },
       ],
     },
     {

@@ -52,7 +52,7 @@
     <form id="form">
       <div class="input-group" id="youtube-input-group">
         <label for="youtube-url">Youtube URL:</label>
-        <input type="text" id="youtube-url" value="https://www.youtube.com/watch?v=ymblqPvS8H4" placeholder="Enter the URL of the song">
+        <input type="text" id="youtube-url" value="https://www.youtube.com/watch?v=A11IW6cLqjA&list=RDA11IW6cLqjA&start_radio=1" placeholder="Enter the URL of the song">
       </div>
       
       <div class="input-group" id="directory-input-group">
@@ -116,7 +116,79 @@
         <p class="progress-title"></p>
         <p class="x">❌</p>
       </div>
-      <div class="body"></div>
+      <div class="progress-content">
+        <div class="phase-cards-container">
+          <div class="phase-card active" data-phase="download">
+            <div class="phase-gauge">
+              <svg viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="45"/>
+                <circle class="gauge-fill" cx="50" cy="50" r="45"/>
+              </svg>
+              <div class="gauge-text">
+                <span class="gauge-percent">0%</span>
+                <span class="gauge-label">Download</span>
+              </div>
+            </div>
+          </div>
+          <div class="phase-card" data-phase="vocals">
+            <div class="phase-gauge">
+              <svg viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="45"/>
+                <circle class="gauge-fill" cx="50" cy="50" r="45"/>
+              </svg>
+              <div class="gauge-text">
+                <span class="gauge-percent">0%</span>
+                <span class="gauge-label">Vocals</span>
+              </div>
+            </div>
+          </div>
+          <div class="phase-card" data-phase="bass">
+            <div class="phase-gauge">
+              <svg viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="45"/>
+                <circle class="gauge-fill" cx="50" cy="50" r="45"/>
+              </svg>
+              <div class="gauge-text">
+                <span class="gauge-percent">0%</span>
+                <span class="gauge-label">Bass</span>
+              </div>
+            </div>
+          </div>
+          <div class="phase-card" data-phase="drums">
+            <div class="phase-gauge">
+              <svg viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="45"/>
+                <circle class="gauge-fill" cx="50" cy="50" r="45"/>
+              </svg>
+              <div class="gauge-text">
+                <span class="gauge-percent">0%</span>
+                <span class="gauge-label">Drums</span>
+              </div>
+            </div>
+          </div>
+          <div class="phase-card" data-phase="others">
+            <div class="phase-gauge">
+              <svg viewBox="0 0 100 100">
+                <circle class="gauge-bg" cx="50" cy="50" r="45"/>
+                <circle class="gauge-fill" cx="50" cy="50" r="45"/>
+              </svg>
+              <div class="gauge-text">
+                <span class="gauge-percent">0%</span>
+                <span class="gauge-label">Others</span>
+              </div>
+            </div>
+          </div>
+        </div>
+        <div class="logs-accordion">
+          <div class="accordion-header">
+            <span class="accordion-title">Logs</span>
+            <i class="fa-solid fa-chevron-down accordion-icon"></i>
+          </div>
+          <div class="accordion-content">
+            <div class="body"></div>
+          </div>
+        </div>
+      </div>
     </dialog>
   </div>
 

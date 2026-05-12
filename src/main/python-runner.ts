@@ -7,12 +7,18 @@ import { PythonOutputMessage } from '../shared/types';
 const isDev = process.env.NODE_ENV === 'development';
 
 const PYTHON_SCRIPT_PATH = isDev
-  ? path.join(__dirname, '../scripts/script_python.py')
+  ? path.join(__dirname, '../../src/scripts/script_python.py')
   : path.join(process.resourcesPath, 'app.asar.unpacked', 'src/scripts/script_python.py');
 
 const pythonVenvPath = isDev
   ? path.join(__dirname, '../../venv/Scripts/python.exe')
   : path.join(process.resourcesPath, 'app.asar.unpacked', 'venv/Scripts/python.exe');
+
+function getDefaultTemplatePath(): string {
+  return isDev
+    ? path.join(__dirname, '../../src/templates/empty-template.flp')
+    : path.join(process.resourcesPath, 'app.asar.unpacked', 'src/templates/empty-template.flp');
+}
 
 interface PythonProcess {
   process: ReturnType<typeof spawn> | null;
@@ -42,7 +48,7 @@ export function runPythonScript(
 
   const finalArgs = args.some((arg) => arg.includes('--template-path'))
     ? args
-    : [...args, '--template-path='];
+    : [...args, `--template-path=${getDefaultTemplatePath()}`];
 
   const spawnOptions: SpawnOptions = {
     stdio: ['pipe', 'pipe', 'pipe'],

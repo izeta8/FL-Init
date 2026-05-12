@@ -50,7 +50,18 @@ module.exports = {
     }),
   ],
 
-  mode: 'development',
+  mode: process.env.NODE_ENV === 'production' ? 'production' : 'development',
 
   target: 'electron-renderer',
+
+  devtool: process.env.NODE_ENV === 'production' ? false : 'source-map',
+
+  devServer: {
+    static: {
+      directory: path.join(__dirname, 'dist/renderer'),
+    },
+    port: 3000,
+    hot: true,
+    historyApiFallback: true,
+  },
 };

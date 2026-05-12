@@ -60,6 +60,18 @@ class App {
     document.getElementById('modal-save')?.addEventListener('click', () => this.saveConfiguration());
     document.getElementById('close-modal')?.addEventListener('click', closeDialog);
 
+    // Browse buttons in the configuration modal
+    const browseConfigButtons = document.querySelectorAll('button[data-browse-config]');
+    browseConfigButtons.forEach((button) => {
+      button.addEventListener('click', (e) => {
+        const parentDiv = (e.target as HTMLElement).closest('div');
+        const input = parentDiv?.querySelector('input');
+        if (input) {
+          ipcService.openDirectoryDialog(input.id);
+        }
+      });
+    });
+
     this.inputYoutubeUrl.addEventListener('change', () => this.validateUrl());
     this.inputProjectLocation.addEventListener('change', () => this.validateInputs());
     this.inputProjectName.addEventListener('change', () => this.validateInputs());
