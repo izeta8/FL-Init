@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <title>FL Init</title>
-  <link rel="stylesheet" href="../css/styles.css">
+  <link rel="stylesheet" href="styles.css">
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; style-src 'self' 'unsafe-inline' https://cdnjs.cloudflare.com; font-src 'self' https://cdnjs.cloudflare.com;">
   <meta charset="UTF-8">
@@ -11,19 +11,14 @@
 <body>
 
   <div id="loading-screen">
-    <div>
-      Loading, please wait...
-    </div>
+    <div>Loading, please wait...</div>
   </div>
 
   <dialog id="dialog">
     <div>
       <button id="close-modal" aria-label="close" class="x">❌</button>
-
       <h2>Configuration</h2>
-       
       <p>Each time you open the application, the following parameters will be taken into account when filling in the fields.</p>
-
       <div>
         <h3>Projects Location</h3>
         <div class="dialog-input-div">
@@ -31,35 +26,26 @@
             <button type="button" data-browse-config>Browse</button>
         </div>
       </div>
-      
       <hr />
-      
       <div>
         <h3>.FLP templates directory</h3>
         <div class="dialog-input-div">
             <input type="text" id="dialog-default-templates-path" placeholder="Default .flp templates location path">
             <button type="button" data-browse-config>Browse</button>
         </div>
-        
       </div>
-      
       <button style="width: 100%;" id="modal-save">SAVE</button>
     </div>
   </dialog>
 
   <div class="container">
     <header>
-   
-      <!-- GitHub Icon -->
       <a href="https://github.com/spewite/FL-Init" target="_blank" class="logo github-logo">
         <i class="fa-brands fa-github"></i>
       </a>
-      
-      <!-- Twitter Icon -->
       <a href="https://x.com/iizetaa" target="_blank" class="logo twitter-logo">
         <i class="fa-brands fa-x-twitter"></i>
       </a>
-
       <span id="app-version"></span>
       <img src="../../icons/icon.png" class="app-logo" draggable="false">
     </header>
@@ -82,9 +68,7 @@
       
       <div class="input-group">
         <label for="template-flp">FLP Template:</label>
-        <select id="template-flp">
-          <!-- Templates options will be generates with JS -->
-        </select>
+        <select id="template-flp"></select>
         <button type="button" id="browse-flp-template">Browse</button>
       </div>
       
@@ -95,13 +79,11 @@
           <span class="slider"></span>
         </label>
       </div>
-      <!-- New container with stems options -->
+      
       <div id="stems-options" style="display:none; margin: 15px 0; border: 1px solid #333; padding: 10px; border-radius: 5px; background: #242424;">
-        <!-- Advanced options header with Font Awesome icon -->
         <div id="advanced-toggle" style="cursor: pointer; color: #ddd; margin-bottom: 10px;">
           Advanced options <i class="fa fa-chevron-down"></i>
         </div>
-        <!-- Advanced options content hidden by default -->
         <div id="advanced-options-content" style="display:none;">
           <div class="input-group">
             <label for="audio-extension">Audio Extension:</label>
@@ -118,7 +100,7 @@
       </div>
 
       <div class="input-group">
-        <input type="submit" id="submit-form" value="DOWNLOAD" /> <!--disabled--> 
+        <input type="submit" id="submit-form" value="DOWNLOAD">
       </div>
     </form>
     
@@ -138,6 +120,6 @@
     </dialog>
   </div>
 
-  <script src="../js/frontend/render.js"></script>
+  <script src="bundle.js"></script>
 </body>
 </html>

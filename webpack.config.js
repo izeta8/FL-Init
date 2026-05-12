@@ -1,51 +1,56 @@
 const path = require('path');
+const CopyPlugin = require('copy-webpack-plugin');
 
 module.exports = {
-  // Punto de entrada para tu aplicación
-  entry: './src/js/frontend/render.js',  // Asegúrate de que este sea el camino correcto al archivo principal de tu renderer
+  entry: './src/renderer/main.ts',
 
-  // Configuración de salida
   output: {
-    path: path.resolve(__dirname, 'dist'),
-    filename: 'bundle.js'
+    path: path.resolve(__dirname, 'dist/renderer'),
+    filename: 'bundle.js',
   },
 
-  // Configuración para módulos
   module: {
     rules: [
-      // Regla para archivos JavaScript
       {
-        test: /\.js$/, // Aplica el loader a archivos .js
-        exclude: /node_modules/, // Excluye la carpeta node_modules
+        test: /\.ts$/,
         use: {
-          loader: 'babel-loader', // Utiliza babel-loader
+          loader: 'ts-loader',
           options: {
-            presets: ['@babel/preset-env'] // Configura Babel para usar preset-env
-          }
-        }
+            configFile: 'tsconfig.renderer.json',
+          },
+        },
+        exclude: /node_modules/,
       },
-      // Regla para archivos CSS
       {
-        test: /\.css$/, // Aplica el loader a archivos CSS
-        use: ['style-loader', 'css-loader'], // Utiliza style-loader y css-loader
-      }
-    ]
+        test: /\.css$/,
+        use: ['style-loader', 'css-loader'],
+      },
+    ],
   },
 
-  // Configuración para resolver módulos
   resolve: {
-    extensions: ['.js', '.jsx', '.css'],
+    extensions: ['.ts', '.js', '.css'],
+    alias: {
+      '@shared': path.resolve(__dirname, 'src/shared'),
+      '@renderer': path.resolve(__dirname, 'src/renderer'),
+    },
     fallback: {
-      "fs": false,  // No incluir fs
-      "path": false,  // No incluir path
-      "child_process": false  // No incluir child_process
-    }
+      fs: false,
+      path: false,
+      child_process: false,
+    },
   },
 
-  // Configuración de modo
-  mode: 'development', // Cambia a 'production' cuando estés listo para desplegar
+  plugins: [
+    new CopyPlugin({
+      patterns: [
+        { from: 'src/renderer/index.html', to: 'index.html' },
+        { from: 'src/renderer/styles.css', to: 'styles.css' },
+      ],
+    }),
+  ],
 
-  // Añade esto si no está presente y tienes problemas específicos de Electron
+  mode: 'development',
+
   target: 'electron-renderer',
-
 };
