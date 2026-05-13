@@ -4,6 +4,14 @@ import { showError, validateYoutubeURL, generateUUID, closeDialog, getFileNameFr
 import { OUTPUT_STATES } from '../shared/constants';
 import type { AppConfig, PythonOutputMessage } from '../shared/types';
 
+type Phase = 'download' | 'vocals' | 'bass' | 'drums' | 'others';
+
+interface PhaseState {
+  phase: Phase;
+  percent: number;
+  active: boolean;
+}
+
 class App {
   private inputYoutubeUrl: HTMLInputElement;
   private inputProjectLocation: HTMLInputElement;
@@ -13,6 +21,10 @@ class App {
   private stemOptions: HTMLElement;
   private pythonOutputContainer: HTMLElement;
   private progressDialogContainer: HTMLElement;
+  private separateStemsEnabled: boolean = false;
+  private currentPhase: Phase = 'download';
+  private currentStemIndex: number = 0;
+  private stemPhases: Phase[] = ['vocals', 'bass', 'drums', 'others'];
 
   constructor() {
     this.inputYoutubeUrl = document.getElementById('youtube-url') as HTMLInputElement;
@@ -272,6 +284,11 @@ class App {
   }
 
   private showProgressModal(projectName: string, UUID: string): void {
+    this.separateStemsEnabled = this.inputSeparateStems.checked;
+    this.currentPhase = 'download';
+    this.currentStemIndex = 0;
+    this.lastStemPercent = -1;
+
     const progressDiv = document.querySelector('.progress-div');
     progressDiv?.classList.remove('hide');
 
@@ -300,15 +317,160 @@ class App {
     const closeBtn = dialog.querySelector('.x');
     closeBtn?.addEventListener('click', closeDialog);
 
+    this.initPhaseCards(dialog, UUID);
+    this.setupAccordion(dialog);
+
     this.progressDialogContainer.appendChild(dialog);
     this.appendOutput('Loading script...', UUID, '#747474');
     dialog.showModal();
+  }
+
+  private initPhaseCards(dialog: HTMLDialogElement, UUID: string): void {
+    const phaseCards = dialog.querySelectorAll('.phase-card');
+    phaseCards.forEach(card => {
+      const phase = card.getAttribute('data-phase') as Phase;
+      card.classList.remove('active', 'completed', 'loading');
+
+      if (phase === 'download') {
+        card.classList.add('active');
+        card.classList.add('loading');
+        this.updateGauge(card as HTMLElement, 0);
+      } else {
+        const stemCard = card as HTMLElement;
+        if (this.separateStemsEnabled) {
+          stemCard.classList.add('visible');
+        } else {
+          stemCard.classList.remove('visible');
+        }
+      }
+    });
+  }
+
+  private setupAccordion(dialog: HTMLDialogElement): void {
+    const accordion = dialog.querySelector('.logs-accordion') as HTMLElement;
+    const header = accordion?.querySelector('.accordion-header');
+    const content = accordion?.querySelector('.accordion-content') as HTMLElement;
+
+    header?.addEventListener('click', () => {
+      accordion.classList.toggle('collapsed');
+    });
+  }
+
+  private updateGauge(phaseCard: HTMLElement, percent: number): void {
+    const gaugeFill = phaseCard.querySelector('.gauge-fill') as SVGCircleElement;
+    const gaugePercent = phaseCard.querySelector('.gauge-percent') as HTMLElement;
+
+    const circumference = 2 * Math.PI * 45;
+    const offset = circumference - (percent / 100) * circumference;
+
+    if (gaugeFill) {
+      gaugeFill.style.strokeDashoffset = offset.toString();
+    }
+    if (gaugePercent) {
+      gaugePercent.textContent = `${Math.round(percent)}%`;
+    }
+  }
+
+  private lastStemPercent: number = -1;
+
+private parsePhaseFromMessage(message: string): { phase: Phase; percent: number } | null {
+    if (message.includes('MoviePy - Done')) {
+      if (this.currentPhase === 'download') {
+        return { phase: 'download', percent: 100 };
+      }
+    }
+
+    if (message.includes('chunk') && message.includes('%')) {
+      const match = message.match(/(\d+)%/);
+      if (match) {
+        const percent = parseInt(match[1], 10);
+        return { phase: 'download', percent };
+      }
+    }
+
+    const stemMatch = message.match(/(\d+)%\s*\|.*\/132\.0/);
+    if (stemMatch) {
+      const percent = parseInt(stemMatch[1], 10);
+      
+      if (percent === 0 && this.lastStemPercent === 100 && this.currentStemIndex < this.stemPhases.length - 1) {
+        this.currentStemIndex++;
+      }
+      
+      this.lastStemPercent = percent;
+      
+      const phase = this.stemPhases[this.currentStemIndex] || 'vocals';
+      return { phase, percent };
+    }
+
+    return null;
+  }
+
+  private updatePhaseUI(dialog: HTMLDialogElement, phase: Phase, percent: number): void {
+    const phaseCards = dialog.querySelectorAll('.phase-card');
+    let previousPhase: string | null = null;
+
+    phaseCards.forEach(card => {
+      const cardPhase = card.getAttribute('data-phase');
+
+      if (cardPhase === phase) {
+        card.classList.add('active');
+        card.classList.remove('completed');
+        if (percent === 0) {
+          card.classList.add('loading');
+        } else {
+          card.classList.remove('loading');
+        }
+        this.updateGauge(card as HTMLElement, percent);
+      } else if (previousPhase && cardPhase === previousPhase) {
+        card.classList.add('completed');
+        card.classList.remove('active');
+        this.updateGauge(card as HTMLElement, 100);
+      }
+
+      if (cardPhase) {
+        previousPhase = cardPhase;
+      }
+    });
   }
 
   private handlePythonOutput(data: PythonOutputMessage): void {
     const { text, UUID, status } = data;
     const color = this.getStatusColor(status);
     this.appendOutput(text, UUID, color);
+
+    const dialog = document.querySelector(`dialog[data-uuid='${UUID}']`) as HTMLDialogElement;
+    if (!dialog) return;
+
+    const phaseData = this.parsePhaseFromMessage(text);
+    if (phaseData) {
+      this.updatePhaseUI(dialog, phaseData.phase, phaseData.percent);
+      this.currentPhase = phaseData.phase;
+    }
+
+    if (text.includes('MoviePy - Done')) {
+      this.updatePhaseUI(dialog, 'download', 100);
+      if (this.separateStemsEnabled && this.currentPhase === 'download') {
+        this.currentStemIndex = 0;
+        setTimeout(() => {
+          const nextPhase = this.stemPhases[0];
+          this.updatePhaseUI(dialog, nextPhase, 0);
+          this.currentPhase = nextPhase;
+        }, 100);
+      }
+    }
+
+    if (text.includes('The split is complete') || text.includes('Script completed successfully')) {
+      const phaseCards = dialog.querySelectorAll('.phase-card');
+      phaseCards.forEach(card => {
+        const cardPhase = card.getAttribute('data-phase') as Phase;
+        if (cardPhase === this.currentPhase) {
+          card.classList.add('completed');
+          card.classList.remove('active');
+          const phase = card as HTMLElement;
+          this.updateGauge(phase, 100);
+        }
+      });
+    }
   }
 
   private getStatusColor(status: OUTPUT_STATES): string {
@@ -324,14 +486,21 @@ class App {
     const dialog = document.querySelector(`dialog[data-uuid='${UUID}']`) as HTMLDialogElement;
     if (!dialog) return;
 
-    const body = dialog.querySelector('.body');
+    const body = dialog.querySelector('.accordion-content .body') as HTMLElement;
     if (!body) return;
 
     const p = document.createElement('p');
     p.textContent = message;
     p.style.color = color;
     body.appendChild(p);
-    (body as HTMLElement).scrollTop = (body as HTMLElement).scrollHeight;
+
+    const autoscrollCheckbox = dialog.querySelector('.autoscroll-checkbox') as HTMLInputElement;
+    if (autoscrollCheckbox && autoscrollCheckbox.checked) {
+      const accordionContent = dialog.querySelector('.accordion-content') as HTMLElement;
+      if (accordionContent) {
+        accordionContent.scroll(0, 99999999);
+      }
+    }
   }
 
   private saveConfiguration(): void {
