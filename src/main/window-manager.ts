@@ -46,6 +46,10 @@ export function createMainWindow(): BrowserWindow {
   setupWindowEvents(mainWindow);
   setupApplicationMenu(mainWindow);
 
+  mainWindow.webContents.on('console-message', (event, level, message, line, sourceId) => {
+    console.log(`[RENDERER CONSOLE] (${level}) ${message} at ${sourceId}:${line}`);
+  });
+
   mainWindow.webContents.on('did-finish-load', () => {
     console.log('Page fully loaded');
   });

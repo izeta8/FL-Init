@@ -1,8 +1,9 @@
 const path = require('path');
 const CopyPlugin = require('copy-webpack-plugin');
+const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 
 module.exports = {
-  entry: './src/renderer/main.ts',
+  entry: './src/renderer/index.tsx',
 
   output: {
     path: path.resolve(__dirname, 'dist/renderer'),
@@ -12,7 +13,7 @@ module.exports = {
   module: {
     rules: [
       {
-        test: /\.ts$/,
+        test: /\.(ts|tsx)$/,
         use: {
           loader: 'ts-loader',
           options: {
@@ -23,13 +24,13 @@ module.exports = {
       },
       {
         test: /\.css$/,
-        use: ['style-loader', 'css-loader'],
+        use: [MiniCssExtractPlugin.loader, 'css-loader', 'postcss-loader'],
       },
     ],
   },
 
   resolve: {
-    extensions: ['.ts', '.js', '.css'],
+    extensions: ['.tsx', '.ts', '.jsx', '.js', '.css'],
     alias: {
       '@shared': path.resolve(__dirname, 'src/shared'),
       '@renderer': path.resolve(__dirname, 'src/renderer'),
@@ -45,8 +46,10 @@ module.exports = {
     new CopyPlugin({
       patterns: [
         { from: 'src/renderer/index.html', to: 'index.html' },
-        { from: 'src/renderer/styles.css', to: 'styles.css' },
       ],
+    }),
+    new MiniCssExtractPlugin({
+      filename: 'styles.css',
     }),
   ],
 
