@@ -52,6 +52,13 @@ export interface HistoryEntry {
   status: 'running' | 'success' | 'error' | 'cancelled';
 }
 
+export type Phase = 'download' | 'vocals' | 'bass' | 'drums' | 'others';
+
+export interface ProgressPhaseState {
+  percent: number;
+  status: 'pending' | 'active' | 'loading' | 'completed' | 'error';
+}
+
 export interface IpcChannels {
   'validate-directory': string;
   'validate-project-name': string;
