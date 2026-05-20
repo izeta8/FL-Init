@@ -12,8 +12,8 @@
         "dev": "concurrently \"npm run dev:renderer\" \"npm run dev:electron\"",
         "dev:renderer": "webpack serve --mode development",
         "dev:electron": "npm run build:main && cross-env NODE_ENV=development electron .",
-        "pack": "npm run build:python && cross-env NODE_ENV=production electron-builder --dir",
-        "dist": "npm run build:python && cross-env NODE_ENV=production electron-builder --publish=never",
+        "pack": "npm run build:python && npm run build && cross-env NODE_ENV=production electron-builder --dir",
+        "dist": "npm run build:python && npm run build && cross-env NODE_ENV=production electron-builder --publish=never",
         "publish": "cross-env NODE_ENV=production node load-env.js"
     },
     "keywords": [],
@@ -57,6 +57,7 @@
         "webpack-dev-server": "^5.0.2"
     },
     "build": {
+        "compression": "normal",
         "asarUnpack": [
             "**/dist/python/**",
             "**/config.json",
@@ -97,7 +98,8 @@
             "dist/",
             "icons/",
             "requirements.txt",
-            "scripts/"
+            "scripts/",
+            "templates/"
         ],
         "nsis": {
             "oneClick": false,

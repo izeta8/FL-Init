@@ -39,8 +39,8 @@ const pythonVenvPath = getPythonPath();
 
 function getDefaultTemplatePath(): string {
   return isDev
-    ? path.join(__dirname, '../../src/templates/empty-template.flp')
-    : path.join(process.resourcesPath, 'app.asar.unpacked', 'src/templates/empty-template.flp');
+    ? path.join(__dirname, '../../templates/empty-template.flp')
+    : path.join(process.resourcesPath, 'app.asar.unpacked', 'templates', 'empty-template.flp');
 }
 
 interface PythonProcess {
