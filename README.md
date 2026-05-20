@@ -5,7 +5,7 @@
 <h1 align="center">FL-Init</h1>
 
 <p align="center">
-  <strong>Streamline your FL Studio workflow by automating project setup directly from YouTube tracks.</strong>
+  <strong>Simplify your remix projects by organizing directories, downloading reference tracks, and separating stems locally and for free.</strong>
 </p>
 
 <p align="center">
@@ -19,7 +19,7 @@
 
 ## Overview
 
-**FL-Init** is an Electron desktop application for Windows designed for music producers to accelerate their workflow when working with reference tracks. By simply pasting a YouTube link, the application handles the tedious process of downloading the audio, separate the stems, and setting up an FL Studio project using your favorite template.
+**FL-Init** is an Electron desktop application for Windows specifically built for remixers and music producers to organize and jumpstart their projects. By filling in just a few fields, the app handles the tedious process of downloading reference tracks from YouTube, running high-quality AI stem separation locally and for free, and setting up a centralized, organized FL Studio project folder with custom `.flp` templates.
 
 ## Key Features
 
