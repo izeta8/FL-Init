@@ -49,6 +49,9 @@ export default function App() {
   const [configProjectPath, setConfigProjectPath] = useState<string>('');
   const [configTemplatesPath, setConfigTemplatesPath] = useState<string>('');
 
+  const [appConfig, setAppConfig] = useState<AppConfig | null>(null);
+  const shouldShowModalRef = useRef(false);
+
   // Active progress modal state
   const [progressProjectName, setProgressProjectName] = useState<string>('');
   const [progressUUID, setProgressUUID] = useState<string | null>(null);
@@ -95,9 +98,12 @@ export default function App() {
 
     // 4. Register IPC Callbacks
     ipcService.onConfiguration((config: AppConfig) => {
-      if (!config.project_path) {
-        // Show configuration dialog if path is not set
+      setAppConfig(config);
+      if (!config.project_path || shouldShowModalRef.current) {
+        setConfigProjectPath(config.project_path || '');
+        setConfigTemplatesPath(config.templates_path || '');
         setShowConfigModal(true);
+        shouldShowModalRef.current = false;
       } else {
         setProjectLocation(config.project_path);
       }
@@ -107,7 +113,8 @@ export default function App() {
     });
 
     ipcService.onConfigSaved((config) => {
-      const jsonConfig = JSON.parse(config.jsonConfig);
+      const jsonConfig = JSON.parse(config.jsonConfig) as AppConfig;
+      setAppConfig(jsonConfig);
       setProjectLocation(jsonConfig.project_path || '');
     });
 
@@ -441,6 +448,18 @@ export default function App() {
     });
   };
 
+  // Open Configuration Modal from UI
+  const handleOpenConfigFromUI = () => {
+    if (appConfig) {
+      setConfigProjectPath(appConfig.project_path || '');
+      setConfigTemplatesPath(appConfig.templates_path || '');
+      setShowConfigModal(true);
+    } else {
+      shouldShowModalRef.current = true;
+      ipcService.getConfiguration();
+    }
+  };
+
   // Clear entire history entries
   const handleClearHistory = () => {
     ipcService.clearHistory().then(() => {
@@ -497,7 +516,16 @@ export default function App() {
           </a>
         </div>
 
-        <div className="absolute right-6 top-6 flex items-center gap-4">
+        <div className="absolute right-6 top-6 flex items-center gap-3">
+          <button 
+            type="button" 
+            onClick={handleOpenConfigFromUI}
+            className="border border-zinc-700 hover:border-primary text-zinc-300 hover:text-primary px-3 py-1 rounded transition-all duration-300 font-semibold text-xs flex items-center gap-1.5"
+            title="Settings"
+          >
+            <i className="fa-solid fa-gear text-[10px]"></i>
+            Settings
+          </button>
           <button 
             type="button" 
             onClick={handleOpenHistoryModal}
@@ -567,7 +595,10 @@ export default function App() {
               </button>
             </div>
             {locationError && (
-              <p className="text-red-500 text-xs font-medium mt-0.5">{locationError}</p>
+              <p 
+                className="text-red-500 text-xs font-medium mt-0.5"
+                dangerouslySetInnerHTML={{ __html: locationError }}
+              />
             )}
           </div>
 
@@ -588,7 +619,10 @@ export default function App() {
               className="bg-zinc-900/60 border border-zinc-800 rounded-md px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-300"
             />
             {nameError && (
-              <p className="text-red-500 text-xs font-medium mt-0.5">{nameError}</p>
+              <p 
+                className="text-red-500 text-xs font-medium mt-0.5"
+                dangerouslySetInnerHTML={{ __html: nameError }}
+              />
             )}
           </div>
 
@@ -851,6 +885,8 @@ export default function App() {
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border bg-sky-950/20 text-sky-400 border-sky-500/20 animate-pulse">Running</span>
                               ) : entry.status === 'success' ? (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border bg-emerald-950/20 text-emerald-400 border-emerald-500/20">Success</span>
+                              ) : entry.status === 'cancelled' ? (
+                                <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border bg-amber-950/20 text-amber-400 border-amber-500/20">Cancelled</span>
                               ) : (
                                 <span className="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold tracking-wide border bg-red-950/20 text-red-400 border-red-500/20">Error</span>
                               )}
@@ -990,28 +1026,7 @@ export default function App() {
 
             </div>
 
-            <div className="border-t border-zinc-900 px-6 py-4 flex justify-between bg-zinc-900/20">
-              <button 
-                onClick={() => {
-                  const logsText = logs.map(l => l.text).join('\n');
-                  navigator.clipboard.writeText(logsText).then(() => {
-                    Swal.fire({
-                      toast: true,
-                      position: 'top-end',
-                      icon: 'success',
-                      title: 'Logs copiados al portapapeles',
-                      showConfirmButton: false,
-                      timer: 1500,
-                      background: '#1e1e1e',
-                      color: '#ffffff',
-                    });
-                  });
-                }}
-                disabled={logs.length === 0}
-                className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-400 hover:text-zinc-200 px-4 py-2 rounded text-xs font-medium transition-all disabled:opacity-40 disabled:pointer-events-none"
-              >
-                Copiar Logs
-              </button>
+            <div className="border-t border-zinc-900 px-6 py-4 flex justify-end bg-zinc-900/20">
               <button 
                 onClick={() => setShowProgressModal(false)}
                 className="bg-zinc-900 hover:bg-zinc-800 border border-zinc-800 text-zinc-300 px-4 py-2 rounded text-xs font-medium transition-colors"

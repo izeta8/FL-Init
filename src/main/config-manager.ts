@@ -29,10 +29,30 @@ function ensureConfigExists(): void {
 export async function getConfiguration(): Promise<AppConfig> {
   ensureConfigExists();
 
-  const data = await fs.promises.readFile(CONFIG_PATH, 'utf8');
-  let config: AppConfig = JSON.parse(data);
-  let updated = false;
+  let config: AppConfig;
+  try {
+    const data = await fs.promises.readFile(CONFIG_PATH, 'utf8');
+    if (!data || data.trim() === '') {
+      throw new Error('Config file is empty');
+    }
+    config = JSON.parse(data);
+  } catch (error) {
+    console.error('Error reading/parsing config, self-healing with defaults:', error);
+    try {
+      if (fs.existsSync(DEFAULT_CONFIG_PATH)) {
+        const defaultData = await fs.promises.readFile(DEFAULT_CONFIG_PATH, 'utf8');
+        config = JSON.parse(defaultData);
+        await fs.promises.writeFile(CONFIG_PATH, defaultData, 'utf8');
+      } else {
+        config = {} as AppConfig;
+      }
+    } catch (fallbackError) {
+      console.error('Failed to restore default config:', fallbackError);
+      config = {} as AppConfig;
+    }
+  }
 
+  let updated = false;
   const numberOfCpus = os.cpus().length.toString();
 
   if (!config.threads) {

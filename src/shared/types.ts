@@ -49,7 +49,7 @@ export interface HistoryEntry {
   youtubeUrl: string;
   videoName?: string;
   createdAt: string;
-  status: 'running' | 'success' | 'error';
+  status: 'running' | 'success' | 'error' | 'cancelled';
 }
 
 export interface IpcChannels {

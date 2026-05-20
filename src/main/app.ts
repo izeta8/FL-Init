@@ -8,6 +8,7 @@ import { createMainWindow, getMainWindow, setAppQuitting } from './window-manage
 import { setupIpcHandlers } from './ipc-handlers.js';
 import { setupAutoUpdater, checkForUpdates } from './updater.js';
 import { killPythonProcess } from './python-runner.js';
+import { cleanRunningHistorySync } from './history-manager.js';
 
 let mainWindow: BrowserWindow | null = null;
 let tray: Tray | null = null;
@@ -30,6 +31,7 @@ if (!gotLock) {
 
 app.on('before-quit', () => {
   killPythonProcess();
+  cleanRunningHistorySync();
   if (mainWindow && !mainWindow.isDestroyed()) {
     mainWindow.removeAllListeners();
   }
@@ -37,6 +39,7 @@ app.on('before-quit', () => {
 });
 
 app.on('ready', async () => {
+  cleanRunningHistorySync();
   mainWindow = createMainWindow();
   setupIpcHandlers(mainWindow);
   setupAutoUpdater(mainWindow);

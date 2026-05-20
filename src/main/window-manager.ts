@@ -87,20 +87,13 @@ function setupWindowEvents(win: BrowserWindow): void {
 }
 
 function setupApplicationMenu(win: BrowserWindow): void {
+  if (!isDev) {
+    Menu.setApplicationMenu(null);
+    win.setMenuBarVisibility(false);
+    return;
+  }
+
   const menu = Menu.buildFromTemplate([
-    {
-      label: 'Settings',
-      submenu: [
-        {
-          label: 'Configuration',
-          click() {
-            getConfiguration().then((config) => {
-              win.webContents.send('show-modal', config);
-            });
-          }
-        },
-      ],
-    },
     {
       label: 'Developer',
       submenu: [
