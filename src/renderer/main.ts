@@ -89,6 +89,20 @@ class App {
     document.getElementById('threads')?.addEventListener('change', () => this.configurationManager.saveThreadExtensionValues());
     document.getElementById('audio-extension')?.addEventListener('change', () => this.configurationManager.saveThreadExtensionValues());
 
+    document.getElementById('btn-history')?.addEventListener('click', (e) => {
+      e.preventDefault();
+      this.showHistoryModal();
+    });
+
+    document.getElementById('close-history-modal')?.addEventListener('click', () => {
+      const historyDialog = document.getElementById('history-dialog') as HTMLDialogElement;
+      if (historyDialog) historyDialog.close();
+    });
+
+    document.getElementById('btn-clear-history')?.addEventListener('click', () => {
+      this.handleClearHistory();
+    });
+
     this.setupAdvancedToggle();
   }
 
@@ -162,6 +176,105 @@ class App {
   private toggleLoadingScreen(show: boolean): void {
     const loadingScreen = document.getElementById('loading-screen');
     if (loadingScreen) loadingScreen.style.display = show ? 'block' : 'none';
+  }
+
+  private showHistoryModal(): void {
+    const historyDialog = document.getElementById('history-dialog') as HTMLDialogElement;
+    if (!historyDialog) return;
+
+    this.loadAndRenderHistory();
+    historyDialog.showModal();
+  }
+
+  private loadAndRenderHistory(): void {
+    ipcService.getHistory().then((historyList) => {
+      const tableBody = document.getElementById('history-table-body');
+      const emptyMessage = document.getElementById('history-empty-message');
+      const table = document.getElementById('history-table');
+
+      if (!tableBody || !emptyMessage || !table) return;
+
+      tableBody.innerHTML = '';
+
+      if (historyList.length === 0) {
+        table.style.display = 'none';
+        emptyMessage.style.display = 'block';
+        return;
+      }
+
+      table.style.display = 'table';
+      emptyMessage.style.display = 'none';
+
+      historyList.forEach((entry) => {
+        const row = document.createElement('tr');
+        
+        const dateFormatted = new Date(entry.createdAt).toLocaleString(undefined, {
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+          hour: '2-digit',
+          minute: '2-digit'
+        });
+
+        let statusBadge = '';
+        if (entry.status === 'running') {
+          statusBadge = `<span class="history-status-badge running">Running</span>`;
+        } else if (entry.status === 'success') {
+          statusBadge = `<span class="history-status-badge success">Success</span>`;
+        } else {
+          statusBadge = `<span class="history-status-badge error">Error</span>`;
+        }
+
+        row.innerHTML = `
+          <td><strong>${entry.projectName}</strong></td>
+          <td style="font-size: 12px; color: #bbb; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${entry.projectLocation}">
+            ${entry.projectLocation}
+          </td>
+          <td>${dateFormatted}</td>
+          <td>${statusBadge}</td>
+          <td class="history-actions-cell">
+            <button class="history-btn-action open-folder-btn" title="Abrir Carpeta" data-path="${entry.projectLocation}">
+              <i class="fa-solid fa-folder-open"></i>
+            </button>
+            <button class="history-btn-action delete-btn delete-item-btn" title="Eliminar del historial" data-id="${entry.id}">
+              <i class="fa-solid fa-trash"></i>
+            </button>
+          </td>
+        `;
+
+        row.querySelector('.open-folder-btn')?.addEventListener('click', (e) => {
+          const btn = e.currentTarget as HTMLElement;
+          const folderPath = btn.getAttribute('data-path') || '';
+          ipcService.openPath(folderPath).then((res) => {
+            if (!res.success) {
+              showError('Error', `No se pudo abrir la carpeta:<br/>${res.error || 'Ruta no encontrada'}`);
+            }
+          });
+        });
+
+        row.querySelector('.delete-item-btn')?.addEventListener('click', (e) => {
+          const btn = e.currentTarget as HTMLElement;
+          const id = btn.getAttribute('data-id') || '';
+          ipcService.deleteHistoryEntry(id).then(() => {
+            this.loadAndRenderHistory();
+          });
+        });
+
+        tableBody.appendChild(row);
+      });
+    }).catch((err) => {
+      console.error('Error loading history:', err);
+      showError('Error', 'No se pudo cargar el historial de descargas.');
+    });
+  }
+
+  private handleClearHistory(): void {
+    ipcService.clearHistory().then(() => {
+      this.loadAndRenderHistory();
+    }).catch((err) => {
+      console.error('Error clearing history:', err);
+      showError('Error', 'No se pudo limpiar el historial.');
+    });
   }
 }
 

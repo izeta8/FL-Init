@@ -38,6 +38,38 @@
     </div>
   </dialog>
 
+  <dialog id="history-dialog">
+    <div style="padding: 20px; position: relative;">
+      <button id="close-history-modal" aria-label="close" class="x">❌</button>
+      <h2>Historial de Descargas</h2>
+      <p style="margin-bottom: 15px;">Lista de proyectos creados y descargas realizadas.</p>
+      
+      <div class="history-table-container">
+        <table id="history-table">
+          <thead>
+            <tr>
+              <th>Proyecto</th>
+              <th>Ruta de Guardado</th>
+              <th>Fecha de Creación</th>
+              <th>Estado</th>
+              <th>Acciones</th>
+            </tr>
+          </thead>
+          <tbody id="history-table-body">
+            <!-- Dinámicamente llenado -->
+          </tbody>
+        </table>
+        <div id="history-empty-message" style="display: none; text-align: center; padding: 30px; color: #888;">
+          No hay descargas en el historial.
+        </div>
+      </div>
+      
+      <div style="margin-top: 15px; display: flex; justify-content: flex-end;">
+        <button id="btn-clear-history" style="background-color: #c52828;">Limpiar Historial</button>
+      </div>
+    </div>
+  </dialog>
+
   <div class="container">
     <header>
       <a href="https://github.com/spewite/FL-Init" target="_blank" class="logo github-logo">
@@ -45,6 +77,9 @@
       </a>
       <a href="https://x.com/iizetaa" target="_blank" class="logo twitter-logo">
         <i class="fa-brands fa-x-twitter"></i>
+      </a>
+      <a href="#" id="btn-history" class="logo history-logo" title="Historial de Descargas">
+        <i class="fa-solid fa-clock-rotate-left"></i>
       </a>
       <span id="app-version"></span>
       <img src="../../icons/icon.png" class="app-logo" draggable="false">
@@ -104,10 +139,7 @@
       </div>
     </form>
     
-    <div class="progress-div hide" style="transition: all .5s">
-      <h3>Progress:</h3>
-      <div class="python-output-container" id="python-output-container"></div>
-    </div>
+
   </div>
   
   <div id="progress-dialog-container">

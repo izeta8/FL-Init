@@ -3,6 +3,7 @@ import path from 'path';
 import { BrowserWindow } from 'electron';
 import { OUTPUT_STATES } from '../shared/constants';
 import { PythonOutputMessage } from '../shared/types';
+import { updateHistoryEntryStatus } from './history-manager';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -105,6 +106,9 @@ export function runPythonScript(
     console.log(`Process finished with code ${code}`);
     cleanup();
 
+    const status = code === 0 ? 'success' : 'error';
+    updateHistoryEntryStatus(UUID, status).catch((err) => console.error('Error updating history entry status:', err));
+
     const message: PythonOutputMessage = {
       text: code === 0 ? 'Script completed successfully' : `Script terminated with error code: ${code}`,
       UUID,
@@ -115,6 +119,7 @@ export function runPythonScript(
   });
 
   pythonProcess.process.on('error', (error: Error) => {
+    updateHistoryEntryStatus(UUID, 'error').catch((err) => console.error('Error updating history entry status:', err));
     const message: PythonOutputMessage = {
       text: `Error executing script: ${error.message}`,
       UUID,

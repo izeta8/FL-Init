@@ -33,22 +33,6 @@ export class ProgressManager {
     this.reset();
     this.separateStemsEnabled = true;
 
-    const progressDiv = document.querySelector('.progress-div');
-    progressDiv?.classList.remove('hide');
-
-    const modalButton = document.createElement('p');
-    const textNode = document.createTextNode(projectName);
-    modalButton.appendChild(textNode);
-    modalButton.setAttribute('data-dialog', UUID);
-    modalButton.className = 'push-button-3d fade-in';
-    this.outputContainer.appendChild(modalButton);
-
-    modalButton.addEventListener('click', () => {
-      const dataDialog = modalButton.getAttribute('data-dialog');
-      const dialog = document.querySelector(`dialog[data-uuid='${dataDialog}']`) as HTMLDialogElement;
-      dialog?.showModal();
-    });
-
     const templateDialog = document.querySelector('dialog[data-template-dialog]') as HTMLDialogElement;
     if (!templateDialog) return;
 

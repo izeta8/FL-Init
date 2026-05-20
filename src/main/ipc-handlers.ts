@@ -1,8 +1,9 @@
-import { ipcMain, dialog, BrowserWindow, app } from 'electron';
+import { ipcMain, dialog, BrowserWindow, app, shell } from 'electron';
 import fs from 'fs';
 import path from 'path';
 import { getConfiguration, saveConfiguration } from './config-manager';
 import { runPythonScript } from './python-runner';
+import { getHistory, clearHistory, deleteHistoryEntry, addHistoryEntry } from './history-manager';
 import { ValidationResponse, AppConfig, PythonScriptInput } from '../shared/types';
 
 export function setupIpcHandlers(mainWindow: BrowserWindow): void {
@@ -103,6 +104,20 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
 
   ipcMain.on('run-python-script', (event, input: PythonScriptInput) => {
     const { args, UUID } = input;
+    const projectLocation = args[0] || '';
+    const youtubeUrl = args[1] || '';
+    const projectName = args[2] || '';
+    const fullProjectPath = path.join(projectLocation, projectName);
+
+    addHistoryEntry({
+      id: UUID,
+      projectName,
+      projectLocation: fullProjectPath,
+      youtubeUrl,
+      createdAt: new Date().toISOString(),
+      status: 'running',
+    }).catch((err) => console.error('Error adding history entry:', err));
+
     runPythonScript(args, UUID, event, mainWindow);
   });
 
@@ -124,6 +139,33 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
       event.sender.send('get-templates-list', { filesPaths });
     } catch (error) {
       console.error('Error loading templates:', error);
+    }
+  });
+
+  ipcMain.handle('get-history', async () => {
+    return await getHistory();
+  });
+
+  ipcMain.handle('clear-history', async () => {
+    await clearHistory();
+    return true;
+  });
+
+  ipcMain.handle('delete-history-entry', async (event, id: string) => {
+    await deleteHistoryEntry(id);
+    return true;
+  });
+
+  ipcMain.handle('open-path', async (event, folderPath: string) => {
+    try {
+      if (fs.existsSync(folderPath)) {
+        await shell.openPath(folderPath);
+        return { success: true };
+      } else {
+        return { success: false, error: 'Path does not exist' };
+      }
+    } catch (err: any) {
+      return { success: false, error: err.message };
     }
   });
 }

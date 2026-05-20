@@ -92,6 +92,7 @@ header { text-align: center; margin-bottom: 20px; }
 .logo:hover { transform: scale(1.1); filter: drop-shadow(0 0 1rem orange); }
 .twitter-logo { left: 40px; }
 .github-logo { left: 100px; }
+.history-logo { left: 160px; }
 
 @keyframes logo-animation {
   from { filter: drop-shadow(0 0 .15rem orange); }
@@ -500,4 +501,128 @@ input:checked + .slider:before { transform: translateX(1.9em); }
 .phase-card.loading .gauge-bg,
 .phase-card.loading .gauge-fill {
   opacity: 0.3;
+}
+
+/* History Modal & Table Styles */
+#history-dialog {
+  width: 75%;
+  max-width: 950px;
+}
+
+.history-table-container {
+  margin-top: 15px;
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #444;
+  border-radius: 5px;
+  background-color: #242424;
+}
+
+/* Custom Scrollbar for history container */
+.history-table-container::-webkit-scrollbar {
+  width: 8px;
+}
+
+.history-table-container::-webkit-scrollbar-track {
+  background: #1a1a1a;
+  border-radius: 5px;
+}
+
+.history-table-container::-webkit-scrollbar-thumb {
+  background: #555;
+  border-radius: 5px;
+}
+
+.history-table-container::-webkit-scrollbar-thumb:hover {
+  background: var(--primary);
+}
+
+#history-table {
+  width: 100%;
+  border-collapse: collapse;
+  color: #eee;
+  font-size: 14px;
+}
+
+#history-table th, #history-table td {
+  padding: 12px 15px;
+  text-align: left;
+  border-bottom: 1px solid #333;
+}
+
+#history-table th {
+  background-color: #1a1a1a;
+  color: var(--primary);
+  font-weight: 600;
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  text-shadow: 0px 1px 10px rgba(217, 176, 99, 0.4);
+}
+
+#history-table tr:hover {
+  background-color: #2d2d2d;
+}
+
+/* Status Badges */
+.history-status-badge {
+  display: inline-block;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 11px;
+  font-weight: bold;
+  text-transform: uppercase;
+  text-align: center;
+}
+
+.history-status-badge.success {
+  background-color: rgba(93, 197, 42, 0.15);
+  color: #5dc52a;
+  border: 1px solid rgba(93, 197, 42, 0.4);
+}
+
+.history-status-badge.error {
+  background-color: rgba(197, 40, 40, 0.15);
+  color: #ff4d4d;
+  border: 1px solid rgba(197, 40, 40, 0.4);
+}
+
+.history-status-badge.running {
+  background-color: rgba(20, 190, 243, 0.15);
+  color: #14bef3;
+  border: 1px solid rgba(20, 190, 243, 0.4);
+  animation: loadingPulse 1.5s infinite ease-in-out;
+}
+
+/* Action Buttons in Table */
+.history-actions-cell {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.history-btn-action {
+  background-color: #3a3a3a;
+  color: #fff;
+  border: none;
+  border-radius: 4px;
+  padding: 6px 10px;
+  font-size: 13px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.history-btn-action:hover {
+  background-color: var(--primary);
+  color: #1a1a1a;
+  box-shadow: 0 0 8px var(--primary);
+}
+
+.history-btn-action.delete-btn:hover {
+  background-color: #c52828;
+  color: #fff;
+  box-shadow: 0 0 8px #c52828;
 }

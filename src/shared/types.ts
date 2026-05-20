@@ -42,6 +42,15 @@ export interface ThreadExtValue {
   audio_extension: string;
 }
 
+export interface HistoryEntry {
+  id: string;
+  projectName: string;
+  projectLocation: string;
+  youtubeUrl: string;
+  createdAt: string;
+  status: 'running' | 'success' | 'error';
+}
+
 export interface IpcChannels {
   'validate-directory': string;
   'validate-project-name': string;
@@ -63,6 +72,10 @@ export interface IpcChannels {
   'client-log': string;
   'generic-error': string;
   'block-ui': string;
+  'get-history': string;
+  'clear-history': string;
+  'delete-history-entry': string;
+  'open-path': string;
 }
 
 export interface ElectronAPI {

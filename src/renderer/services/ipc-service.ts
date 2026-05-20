@@ -1,4 +1,4 @@
-import { AppConfig, ValidationResponse, PythonScriptInput, TemplatesListResponse, ConfigSaveResponse } from '../../shared/types';
+import { AppConfig, ValidationResponse, PythonScriptInput, TemplatesListResponse, ConfigSaveResponse, HistoryEntry } from '../../shared/types';
 
 type IpcCallback = (...args: unknown[]) => void;
 
@@ -7,6 +7,22 @@ class IpcService {
 
   async getAppVersion(): Promise<string> {
     return await this.api.invoke<string>('get-app-version');
+  }
+
+  async getHistory(): Promise<HistoryEntry[]> {
+    return await this.api.invoke<HistoryEntry[]>('get-history');
+  }
+
+  async clearHistory(): Promise<boolean> {
+    return await this.api.invoke<boolean>('clear-history');
+  }
+
+  async deleteHistoryEntry(id: string): Promise<boolean> {
+    return await this.api.invoke<boolean>('delete-history-entry', id);
+  }
+
+  async openPath(path: string): Promise<{ success: boolean; error?: string }> {
+    return await this.api.invoke<{ success: boolean; error?: string }>('open-path', path);
   }
 
   async getConfiguration(): Promise<void> {
