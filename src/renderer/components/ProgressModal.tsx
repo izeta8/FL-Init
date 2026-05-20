@@ -33,7 +33,7 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-9999 flex items-center justify-center p-4">
       <div className="w-full max-w-4xl bg-zinc-950 border border-zinc-800 rounded-lg shadow-2xl overflow-hidden animate-zoomIn flex flex-col max-h-[90vh]">
         
         {/* Header */}
@@ -47,7 +47,7 @@ export const ProgressModal: React.FC<ProgressModalProps> = ({
           </button>
         </div>
 
-        <div className="p-6 flex flex-col gap-6 overflow-y-auto flex-grow custom-scrollbar">
+        <div className="p-6 flex flex-col gap-6 overflow-y-auto grow custom-scrollbar">
           
           {/* Horizontal cards wrapper */}
           <div className="flex flex-wrap justify-center gap-4 py-2">
@@ -152,16 +152,16 @@ const CircularGauge: React.FC<CircularGaugeProps> = ({ percent, label, isActive,
   else if (isCompleted) strokeColor = 'stroke-green-500';
 
   return (
-    <div className={`flex flex-col items-center p-4 rounded-xl border min-w-[115px] transition-all duration-300 relative select-none
+    <div className={`flex flex-col items-center p-4 rounded-xl border min-w-28.75 transition-all duration-300 relative select-none
       ${isActive ? 'border-primary/50 bg-zinc-900/50 shadow-[0_0_15px_rgba(217,176,99,0.06)] opacity-100' : ''}
       ${isCompleted ? 'border-green-500/20 bg-green-950/5 opacity-90' : ''}
       ${!isActive && !isCompleted ? 'border-zinc-900 bg-zinc-950/20 opacity-40' : ''}
     `}>
       <div className="relative w-20 h-20 flex items-center justify-center">
         <svg viewBox="0 0 100 100" className="w-full h-full -rotate-90">
-          <circle className="stroke-zinc-900/80 fill-none stroke-[8]" cx="50" cy="50" r="45" />
+          <circle className="stroke-zinc-900/80 fill-none stroke-8" cx="50" cy="50" r="45" />
           <circle
-            className={`fill-none stroke-[8] stroke-linecap-round transition-all duration-500 ${strokeColor}`}
+            className={`fill-none stroke-8 stroke-linecap-round transition-all duration-500 ${strokeColor}`}
             cx="50"
             cy="50"
             r="45"

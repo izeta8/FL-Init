@@ -522,7 +522,7 @@ export default function App() {
       <LoadingOverlay isLoading={isLoading} />
 
       {/* Main Container Card */}
-      <div className="w-[92%] max-w-[1400px] form-container-card backdrop-blur-md rounded-xl p-8 relative">
+      <div className="w-[92%] max-w-350 form-container-card backdrop-blur-md rounded-xl p-8 relative">
         
         <Header 
           appVersion={appVersion}

@@ -21,7 +21,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4">
+    <div className="fixed inset-0 bg-black/60 backdrop-blur-sm z-9999 flex items-center justify-center p-4">
       <div className="w-full max-w-5xl bg-zinc-950 border border-zinc-800 rounded-lg shadow-2xl overflow-hidden animate-zoomIn flex flex-col max-h-[85vh]">
         <div className="flex items-center justify-between border-b border-zinc-900 px-6 py-4">
           <div>
@@ -36,7 +36,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
           </button>
         </div>
         
-        <div className="p-6 overflow-y-auto flex-grow custom-scrollbar">
+        <div className="p-6 overflow-y-auto grow custom-scrollbar">
           {historyList.length === 0 ? (
             <div className="text-center py-16 text-zinc-500 text-xs font-medium">
               No downloads in history.
@@ -63,8 +63,8 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
 
                     return (
                       <tr key={entry.id} className="hover:bg-zinc-900/30 transition-colors">
-                        <td className="px-4 py-3 font-bold text-white max-w-[150px] truncate">{entry.projectName}</td>
-                        <td className="px-4 py-3 max-w-[200px] truncate font-medium" title={entry.videoName || ''}>
+                        <td className="px-4 py-3 font-bold text-white max-w-37.5 truncate">{entry.projectName}</td>
+                        <td className="px-4 py-3 max-w-50 truncate font-medium" title={entry.videoName || ''}>
                           {entry.videoName ? (
                             <span>{entry.videoName}</span>
                           ) : (
@@ -73,7 +73,7 @@ export const HistoryModal: React.FC<HistoryModalProps> = ({
                             </span>
                           )}
                         </td>
-                        <td className="px-4 py-3 max-w-[200px] truncate text-zinc-400" title={entry.projectLocation}>
+                        <td className="px-4 py-3 max-w-50 truncate text-zinc-400" title={entry.projectLocation}>
                           {entry.projectLocation}
                         </td>
                         <td className="px-4 py-3 text-zinc-400">{dateFormatted}</td>

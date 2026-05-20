@@ -105,7 +105,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
               setLocationError(null);
             }}
             placeholder="Select the project location"
-            className="flex-grow bg-zinc-900/60 border border-zinc-800 rounded-md px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-300"
+            className="grow bg-zinc-900/60 border border-zinc-800 rounded-md px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-300"
           />
           <button 
             type="button" 
@@ -155,7 +155,7 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
             id="template-flp" 
             value={selectedTemplate}
             onChange={(e) => setSelectedTemplate(e.target.value)}
-            className="flex-grow bg-zinc-900/60 border border-zinc-800 rounded-md px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-300"
+            className="grow bg-zinc-900/60 border border-zinc-800 rounded-md px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-300"
           >
             <option value="">(empty template)</option>
             {templatesList.map((path) => (
