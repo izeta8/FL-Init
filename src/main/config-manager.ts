@@ -1,12 +1,13 @@
 import fs from 'fs';
 import path from 'path';
 import os from 'os';
+import { app } from 'electron';
 import { AppConfig } from '../shared/types';
 import { APP_CONFIG } from '../shared/constants';
 
 const isDev = process.env.NODE_ENV === 'development';
 
-const APPDATA_PATH = path.join(os.homedir(), 'AppData', 'Roaming', 'flinit');
+const APPDATA_PATH = app.getPath('userData');
 const CONFIG_PATH = path.join(APPDATA_PATH, 'config.json');
 
 const DEFAULT_CONFIG_PATH = isDev

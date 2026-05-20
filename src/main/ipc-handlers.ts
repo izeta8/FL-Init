@@ -16,7 +16,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
       const response: ValidationResponse = { success: true, errorMessage: '' };
       if (err || !stats.isDirectory()) {
         response.success = false;
-        response.errorMessage = `<p>❌ The base route <span style="font-weight: bold; font-style: italic;">${pathToValidate}</span> does not exist!</p>`;
+        response.errorMessage = pathToValidate;
       }
       event.reply('validate-directory', response);
     });
@@ -30,7 +30,7 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
       const response: ValidationResponse = { success: true, errorMessage: '' };
       if (!err) {
         response.success = false;
-        response.errorMessage = `<p>❌ The directory <span style="font-weight: bold; font-style: italic;">${pathToValidate}</span> already exists!</p>`;
+        response.errorMessage = pathToValidate;
       }
       event.reply('validate-project-name', response);
     });
@@ -159,6 +159,10 @@ export function setupIpcHandlers(mainWindow: BrowserWindow): void {
   ipcMain.handle('open-path', async (event, folderPath: string) => {
     try {
       if (fs.existsSync(folderPath)) {
+        const stats = fs.statSync(folderPath);
+        if (!stats.isDirectory()) {
+          return { success: false, error: 'Path is not a directory' };
+        }
         await shell.openPath(folderPath);
         return { success: true };
       } else {

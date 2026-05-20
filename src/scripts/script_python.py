@@ -11,6 +11,8 @@ This script handles:
 import os
 import shutil
 import sys
+import platform
+import subprocess
 import argparse
 import stat
 from typing import Optional, Dict, Any
@@ -217,7 +219,13 @@ def move_stems_up(stems_base: str) -> None:
 
 def open_folder(path: str) -> None:
     """Open the directory in the file explorer."""
-    os.startfile(path)
+    system = platform.system()
+    if system == 'Windows':
+        os.startfile(path)
+    elif system == 'Darwin':
+        subprocess.Popen(['open', path])
+    else: # Linux
+        subprocess.Popen(['xdg-open', path])
 
 
 def validate_project_name(name: str) -> None:

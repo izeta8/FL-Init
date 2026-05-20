@@ -1,5 +1,6 @@
 import { spawn, SpawnOptions } from 'child_process';
 import path from 'path';
+import fs from 'fs';
 import { BrowserWindow } from 'electron';
 import { OUTPUT_STATES } from '../shared/constants';
 import { PythonOutputMessage } from '../shared/types';
@@ -11,9 +12,30 @@ const PYTHON_SCRIPT_PATH = isDev
   ? path.join(__dirname, '../../src/scripts/script_python.py')
   : path.join(process.resourcesPath, 'app.asar.unpacked', 'src/scripts/script_python.py');
 
-const pythonVenvPath = isDev
-  ? path.join(__dirname, '../../venv/Scripts/python.exe')
-  : path.join(process.resourcesPath, 'app.asar.unpacked', 'venv/Scripts/python.exe');
+const isWin = process.platform === 'win32';
+const pythonBin = isWin ? 'Scripts/python.exe' : 'bin/python';
+
+function getPythonPath(): string {
+  if (isDev) {
+    // 1. Try local portable python
+    const localPortablePath = path.join(__dirname, '../../python/python.exe');
+    if (fs.existsSync(localPortablePath)) {
+      return localPortablePath;
+    }
+    // 2. Try standard local venv
+    const localVenvPath = path.join(__dirname, '../../venv', pythonBin);
+    if (fs.existsSync(localVenvPath)) {
+      return localVenvPath;
+    }
+    // 3. Fallback to system python
+    return isWin ? 'python.exe' : 'python3';
+  } else {
+    // Production portable python
+    return path.join(process.resourcesPath, 'app.asar.unpacked', 'python', 'python.exe');
+  }
+}
+
+const pythonVenvPath = getPythonPath();
 
 function getDefaultTemplatePath(): string {
   return isDev

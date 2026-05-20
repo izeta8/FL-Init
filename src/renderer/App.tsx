@@ -220,15 +220,19 @@ export default function App() {
 
   // Validate fields dynamically
   useEffect(() => {
-    if (projectLocation) {
+    if (!projectLocation) return;
+    const timer = setTimeout(() => {
       ipcService.validateDirectory(projectLocation);
-    }
+    }, 300);
+    return () => clearTimeout(timer);
   }, [projectLocation]);
 
   useEffect(() => {
-    if (projectLocation && projectName) {
+    if (!projectLocation || !projectName) return;
+    const timer = setTimeout(() => {
       ipcService.validateProjectName(projectLocation, projectName);
-    }
+    }, 300);
+    return () => clearTimeout(timer);
   }, [projectLocation, projectName]);
 
   const handleYoutubeUrlChange = (e: React.ChangeEvent<HTMLInputElement>) => {
