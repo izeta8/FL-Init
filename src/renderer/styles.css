@@ -126,3 +126,41 @@ button, select, input[type="submit"], input[type="button"], [role="button"], lab
 .animate-spin-slow {
   animation: spin-slow 8s linear infinite;
 }
+
+/* Responsive Scaling for Laptop Screens (Height-based) */
+@media (max-height: 850px) {
+  .form-container-card {
+    padding: 1.5rem !important; /* Reduce padding from 2rem to 1.5rem */
+  }
+  header.mb-8 {
+    margin-bottom: 1.25rem !important;
+  }
+  .w-48.logo-shadow {
+    width: 10rem !important; /* Scale logo from w-48 (12rem) to 10rem */
+  }
+  form.gap-5 {
+    gap: 0.85rem !important; /* Reduce gaps between inputs */
+  }
+  div.gap-1\.5 {
+    gap: 0.25rem !important; /* Tighter input group spacing */
+  }
+}
+
+@media (max-height: 720px) {
+  .form-container-card {
+    padding: 1rem !important;
+  }
+  header.mb-8 {
+    margin-bottom: 0.75rem !important;
+    margin-top: 0.25rem !important;
+  }
+  .w-48.logo-shadow {
+    width: 8rem !important; /* Scale logo down to 8rem */
+  }
+  form.gap-5 {
+    gap: 0.65rem !important;
+  }
+  div.gap-1\.5 {
+    gap: 0.15rem !important;
+  }
+}

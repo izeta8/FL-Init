@@ -485,7 +485,7 @@ export default function App() {
       )}
 
       {/* Main Container Card */}
-      <div className="w-full max-w-[1400px] form-container-card backdrop-blur-md rounded-xl p-8 relative">
+      <div className="w-[92%] max-w-[1400px] form-container-card backdrop-blur-md rounded-xl p-8 relative">
         
         {/* Social and Info header icons */}
         <div className="absolute left-6 top-6 flex items-center gap-4">
