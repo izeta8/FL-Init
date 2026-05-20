@@ -18,7 +18,7 @@ const pythonBin = isWin ? 'Scripts/python.exe' : 'bin/python';
 function getPythonPath(): string {
   if (isDev) {
     // 1. Try local portable python
-    const localPortablePath = path.join(__dirname, '../../python/python.exe');
+    const localPortablePath = path.join(__dirname, '../../dist/python/python.exe');
     if (fs.existsSync(localPortablePath)) {
       return localPortablePath;
     }
@@ -31,7 +31,7 @@ function getPythonPath(): string {
     return isWin ? 'python.exe' : 'python3';
   } else {
     // Production portable python
-    return path.join(process.resourcesPath, 'app.asar.unpacked', 'python', 'python.exe');
+    return path.join(process.resourcesPath, 'app.asar.unpacked', 'dist', 'python', 'python.exe');
   }
 }
 

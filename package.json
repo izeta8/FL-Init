@@ -58,7 +58,7 @@
     },
     "build": {
         "asarUnpack": [
-            "**/python/**",
+            "**/dist/python/**",
             "**/config.json",
             "**/scripts/**",
             "**/icons/**",
@@ -96,8 +96,7 @@
         "files": [
             "dist/",
             "icons/",
-            "requirements.txt",
-            "python/"
+            "requirements.txt"
         ],
         "nsis": {
             "oneClick": false,

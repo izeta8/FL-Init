@@ -2,13 +2,14 @@ const fs = require('fs');
 const path = require('path');
 const { execSync } = require('child_process');
 const https = require('https');
+const crypto = require('crypto');
 
 const PYTHON_VERSION = '3.10.11';
 const PYTHON_ZIP_URL = `https://www.python.org/ftp/python/${PYTHON_VERSION}/python-${PYTHON_VERSION}-embed-amd64.zip`;
 const GET_PIP_URL = 'https://bootstrap.pypa.io/get-pip.py';
 
 const ROOT_DIR = path.resolve(__dirname, '..');
-const PORTABLE_PYTHON_DIR = path.join(ROOT_DIR, 'python');
+const PORTABLE_PYTHON_DIR = path.join(ROOT_DIR, 'dist', 'python');
 const TEMP_ZIP_PATH = path.join(ROOT_DIR, 'python-portable.zip');
 const GET_PIP_PATH = path.join(PORTABLE_PYTHON_DIR, 'get-pip.py');
 const REQUIREMENTS_PATH = path.join(ROOT_DIR, 'requirements.txt');
@@ -52,6 +53,22 @@ function extractZip(zipPath, destDir) {
 
 async function setup() {
   try {
+    // 0. Cache check
+    let currentHash = 'no-requirements';
+    if (fs.existsSync(REQUIREMENTS_PATH)) {
+      const reqContent = fs.readFileSync(REQUIREMENTS_PATH, 'utf8');
+      currentHash = crypto.createHash('md5').update(reqContent).digest('hex');
+    }
+    
+    const hashFile = path.join(PORTABLE_PYTHON_DIR, '.requirements_hash');
+    if (fs.existsSync(PORTABLE_PYTHON_DIR) && fs.existsSync(hashFile)) {
+      const savedHash = fs.readFileSync(hashFile, 'utf8');
+      if (savedHash === currentHash) {
+        console.log('⚡ Cache hit! Python and dependencies already installed. Skipping bootstrap.');
+        return;
+      }
+    }
+
     // 1. Clean previous installation
     if (fs.existsSync(PORTABLE_PYTHON_DIR)) {
       console.log('Cleaning existing python folder...');
@@ -114,6 +131,9 @@ async function setup() {
     } else {
       console.log('No requirements.txt found, skipping dependency installation.');
     }
+
+    // 8. Save cache hash
+    fs.writeFileSync(hashFile, currentHash, 'utf8');
 
     console.log('Standalone Portable Python environment setup successfully!');
   } catch (error) {
