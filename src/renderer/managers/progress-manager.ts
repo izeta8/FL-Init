@@ -31,7 +31,6 @@ export class ProgressManager {
 
   public showProgressModal(projectName: string, UUID: string): void {
     this.reset();
-    this.separateStemsEnabled = true;
 
     const templateDialog = document.querySelector('dialog[data-template-dialog]') as HTMLDialogElement;
     if (!templateDialog) return;
@@ -131,13 +130,31 @@ export class ProgressManager {
   }
 
   private updatePhaseUI(dialog: HTMLDialogElement, phase: Phase, percent: number): void {
+    const phases: Phase[] = this.separateStemsEnabled 
+      ? ['download', 'vocals', 'bass', 'drums', 'others'] 
+      : ['download'];
+    
+    const currentIdx = phases.indexOf(phase);
+    if (currentIdx === -1) return;
+
     const phaseCards = dialog.querySelectorAll('.phase-card');
-    let previousPhase: string | null = null;
-
     phaseCards.forEach(card => {
-      const cardPhase = card.getAttribute('data-phase');
+      const cardPhase = card.getAttribute('data-phase') as Phase;
+      const idx = phases.indexOf(cardPhase);
 
-      if (cardPhase === phase) {
+      if (idx === -1) {
+        // Not a phase in the current run (e.g. stem separation is disabled)
+        card.classList.remove('active', 'completed', 'loading');
+        return;
+      }
+
+      if (idx < currentIdx) {
+        // Completed phase
+        card.classList.add('completed');
+        card.classList.remove('active', 'loading');
+        this.updateGauge(card as HTMLElement, 100);
+      } else if (idx === currentIdx) {
+        // Current active phase
         card.classList.add('active');
         card.classList.remove('completed');
         if (percent === 0) {
@@ -146,14 +163,10 @@ export class ProgressManager {
           card.classList.remove('loading');
         }
         this.updateGauge(card as HTMLElement, percent);
-      } else if (previousPhase && cardPhase === previousPhase) {
-        card.classList.add('completed');
-        card.classList.remove('active');
-        this.updateGauge(card as HTMLElement, 100);
-      }
-
-      if (cardPhase) {
-        previousPhase = cardPhase;
+      } else {
+        // Pending phase
+        card.classList.remove('active', 'completed', 'loading');
+        this.updateGauge(card as HTMLElement, 0);
       }
     });
   }
@@ -185,14 +198,17 @@ export class ProgressManager {
     }
 
     if (text.includes('The split is complete') || text.includes('Script completed successfully')) {
+      const phases: Phase[] = this.separateStemsEnabled
+        ? ['download', 'vocals', 'bass', 'drums', 'others']
+        : ['download'];
+
       const phaseCards = dialog.querySelectorAll('.phase-card');
       phaseCards.forEach(card => {
         const cardPhase = card.getAttribute('data-phase') as Phase;
-        if (cardPhase === this.currentPhase) {
+        if (phases.includes(cardPhase)) {
           card.classList.add('completed');
-          card.classList.remove('active');
-          const phase = card as HTMLElement;
-          this.updateGauge(phase, 100);
+          card.classList.remove('active', 'loading');
+          this.updateGauge(card as HTMLElement, 100);
         }
       });
     }
