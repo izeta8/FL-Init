@@ -1,4 +1,4 @@
-import { BrowserWindow, Menu } from 'electron';
+import { BrowserWindow, Menu, shell } from 'electron';
 import path from 'path';
 import { getConfiguration } from './config-manager';
 
@@ -42,6 +42,21 @@ export function createMainWindow(): BrowserWindow {
 
   mainWindow.loadFile(RENDERER_HTML_PATH);
   mainWindow.maximize();
+
+  // Open external HTTP/HTTPS links in default browser
+  mainWindow.webContents.setWindowOpenHandler(({ url }) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      shell.openExternal(url);
+    }
+    return { action: 'deny' };
+  });
+
+  mainWindow.webContents.on('will-navigate', (event, url) => {
+    if (url.startsWith('http://') || url.startsWith('https://')) {
+      event.preventDefault();
+      shell.openExternal(url);
+    }
+  });
 
   setupWindowEvents(mainWindow);
   setupApplicationMenu(mainWindow);
