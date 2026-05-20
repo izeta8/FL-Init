@@ -11,8 +11,8 @@
 <p align="center">
   <img src="https://img.shields.io/badge/Electron-30.x-blue?logo=electron&logoColor=white" alt="Electron Version" />
   <img src="https://img.shields.io/badge/Python-3.10.x-green?logo=python&logoColor=white" alt="Python Version" />
-  <img src="https://img.shields.io/badge/License-ISC-orange.svg" alt="License" />
-  <img src="https://img.shields.io/badge/Platform-Windows%20%7C%20macOS%20%7C%20Linux-lightgrey" alt="Platforms" />
+  <img src="https://img.shields.io/badge/License-Proprietary-red" alt="License" />
+  <img src="https://img.shields.io/badge/Platform-Windows-blue" alt="Platforms" />
 </p>
 
 ---
@@ -32,7 +32,7 @@
 
 ---
 
-## 📸 Interface Preview
+## Interface Preview
 
 Here is a preview of the FL-Init dashboard:
 
@@ -40,7 +40,7 @@ Here is a preview of the FL-Init dashboard:
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 *   **Main Process**: Electron 30.0.2, TypeScript, `electron-log`, `electron-updater`
 *   **Renderer Process (Frontend)**: React 19, TypeScript, Webpack 5, Tailwind CSS, SweetAlert2
@@ -54,7 +54,7 @@ Here is a preview of the FL-Init dashboard:
 
 ---
 
-## 📦 Installation & Setup
+## Installation & Setup
 
 ### For General Users
 1. Go to the [Releases Page](https://github.com/spewite/FL-Init/releases).
@@ -99,7 +99,7 @@ npm run dev
 
 ---
 
-## 💻 Available NPM Commands
+## Available NPM Commands
 
 | Command | Description |
 | :--- | :--- |
@@ -112,7 +112,7 @@ npm run dev
 
 ---
 
-## 📂 Project Structure
+## Project Structure
 
 ```
 ├── .agents/              # AI agent workspace configuration
@@ -138,7 +138,7 @@ npm run dev
 
 ---
 
-## 🔒 Security Practices
+## Security Practices
 
 FL-Init follows standard Electron security guidelines:
 *   `contextIsolation` is enabled in all BrowserWindows.
@@ -146,6 +146,6 @@ FL-Init follows standard Electron security guidelines:
 *   Renderer-to-Main communication is bridged securely through `contextBridge` using limited, well-defined IPC channels.
 *   All user arguments passed down to the Python process are validated.
 
-## 📄 License
+## License
 
-This project is proprietary. All rights are reserved. No part of this software may be copied, modified, distributed, or commercialized without the explicit written permission of the author. Refer to [LICENSE](file:///I:/Izeta/Documentos/Proyectos/FL-Init/LICENSE) for more details.
+This project is proprietary. All rights are reserved. No part of this software may be copied, modified, distributed, or commercialized without the explicit written permission of the author. Refer to [LICENSE](LICENSE) for more details.
