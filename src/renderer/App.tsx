@@ -23,7 +23,7 @@ export default function App() {
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
   // Form State
-  const [youtubeUrl, setYoutubeUrl] = useState<string>('https://www.youtube.com/watch?v=A11IW6cLqjA&list=RDA11IW6cLqjA&start_radio=1');
+  const [youtubeUrl, setYoutubeUrl] = useState<string>('');
   const [projectLocation, setProjectLocation] = useState<string>('');
   const [projectName, setProjectName] = useState<string>('');
   const [selectedTemplate, setSelectedTemplate] = useState<string>('');
