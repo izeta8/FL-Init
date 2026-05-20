@@ -121,6 +121,7 @@ def download_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str
         yt = YouTube(url)
         title = yt.title
         title = ''.join(char for char in title if char.isalnum() or char in " -_")
+        output_message(f"Youtube Title: {title}")
 
         os.makedirs(assets_path, exist_ok=True)
 

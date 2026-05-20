@@ -59,6 +59,15 @@ export async function deleteHistoryEntry(id: string): Promise<void> {
   await saveHistory(updatedHistory);
 }
 
+export async function updateHistoryEntryVideoName(id: string, videoName: string): Promise<void> {
+  const history = await getHistory();
+  const index = history.findIndex(h => h.id === id);
+  if (index !== -1) {
+    history[index].videoName = videoName;
+    await saveHistory(history);
+  }
+}
+
 export async function clearHistory(): Promise<void> {
   await saveHistory([]);
 }

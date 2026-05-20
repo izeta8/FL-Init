@@ -47,6 +47,7 @@ export interface HistoryEntry {
   projectName: string;
   projectLocation: string;
   youtubeUrl: string;
+  videoName?: string;
   createdAt: string;
   status: 'running' | 'success' | 'error';
 }

@@ -3,7 +3,7 @@ import path from 'path';
 import { BrowserWindow } from 'electron';
 import { OUTPUT_STATES } from '../shared/constants';
 import { PythonOutputMessage } from '../shared/types';
-import { updateHistoryEntryStatus } from './history-manager';
+import { updateHistoryEntryStatus, updateHistoryEntryVideoName } from './history-manager';
 
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -73,8 +73,17 @@ export function runPythonScript(
   };
 
   pythonProcess.process.stdout?.on('data', (data: Buffer) => {
-    const text = data.toString().toLowerCase();
+    const rawText = data.toString();
+    const text = rawText.toLowerCase();
     let status: OUTPUT_STATES;
+
+    const titleMatch = rawText.match(/Youtube Title:\s*(.*)/i);
+    if (titleMatch && titleMatch[1]) {
+      const youtubeTitle = titleMatch[1].trim();
+      updateHistoryEntryVideoName(UUID, youtubeTitle).catch((err) => 
+        console.error('Error updating history entry videoName:', err)
+      );
+    }
 
     if (text.includes('error')) {
       status = OUTPUT_STATES.ERROR;
@@ -85,7 +94,7 @@ export function runPythonScript(
     }
 
     const message: PythonOutputMessage = {
-      text: data.toString(),
+      text: rawText,
       UUID,
       status,
     };

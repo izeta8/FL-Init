@@ -225,9 +225,16 @@ class App {
           statusBadge = `<span class="history-status-badge error">Error</span>`;
         }
 
+        const videoNameHtml = entry.videoName 
+          ? `<span style="font-weight: 500;">${entry.videoName}</span>` 
+          : `<span style="color: #888; font-style: italic;">${entry.status === 'running' ? 'Obteniendo título...' : 'No disponible'}</span>`;
+
         row.innerHTML = `
           <td><strong>${entry.projectName}</strong></td>
-          <td style="font-size: 12px; color: #bbb; max-width: 300px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${entry.projectLocation}">
+          <td style="font-size: 13px; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${entry.videoName || ''}">
+            ${videoNameHtml}
+          </td>
+          <td style="font-size: 12px; color: #bbb; max-width: 250px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;" title="${entry.projectLocation}">
             ${entry.projectLocation}
           </td>
           <td>${dateFormatted}</td>
