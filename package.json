@@ -96,7 +96,8 @@
         "files": [
             "dist/",
             "icons/",
-            "requirements.txt"
+            "requirements.txt",
+            "scripts/"
         ],
         "nsis": {
             "oneClick": false,

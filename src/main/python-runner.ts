@@ -9,8 +9,8 @@ import { updateHistoryEntryStatus, updateHistoryEntryVideoName } from './history
 const isDev = process.env.NODE_ENV === 'development';
 
 const PYTHON_SCRIPT_PATH = isDev
-  ? path.join(__dirname, '../../src/scripts/script_python.py')
-  : path.join(process.resourcesPath, 'app.asar.unpacked', 'src/scripts/script_python.py');
+  ? path.join(__dirname, '../../scripts/script_python.py')
+  : path.join(process.resourcesPath, 'app.asar.unpacked', 'scripts/script_python.py');
 
 const isWin = process.platform === 'win32';
 const pythonBin = isWin ? 'Scripts/python.exe' : 'bin/python';
