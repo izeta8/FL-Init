@@ -510,8 +510,8 @@ input:checked + .slider:before { transform: translateX(1.9em); }
 
 .history-text-btn {
   position: absolute;
-  right: 30px;
-  top: 30px;
+  right: 90px;
+  top: 25px;
   background-color: transparent;
   border: 1px solid var(--primary);
   color: var(--primary);
