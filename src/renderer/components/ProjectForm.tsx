@@ -116,10 +116,9 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           </button>
         </div>
         {locationError && (
-          <p 
-            className="text-red-500 text-xs font-medium mt-0.5"
-            dangerouslySetInnerHTML={{ __html: locationError }}
-          />
+          <p className="text-red-500 text-xs font-medium mt-0.5">
+            ❌ The base route <span className="font-bold italic">{locationError}</span> does not exist!
+          </p>
         )}
       </div>
 
@@ -140,10 +139,9 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
           className="bg-zinc-900/60 border border-zinc-800 rounded-md px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-300"
         />
         {nameError && (
-          <p 
-            className="text-red-500 text-xs font-medium mt-0.5"
-            dangerouslySetInnerHTML={{ __html: nameError }}
-          />
+          <p className="text-red-500 text-xs font-medium mt-0.5">
+            ❌ The directory <span className="font-bold italic">{nameError}</span> already exists!
+          </p>
         )}
       </div>
 
