@@ -168,4 +168,33 @@ export function killPythonProcess(): void {
   }
 }
 
+export function preWarmPython(): void {
+  console.log('Pre-warming Python environment in the background...');
+  
+  // We want to run a quick background check/import of all heavy modules
+  // so Windows Defender scans them and the OS caches the DLLs in RAM.
+  const prewarmScript = 'import pyflp, numpy, librosa, torch, demucs, pytubefix, moviepy';
+  
+  const spawnOptions: SpawnOptions = {
+    stdio: 'ignore',
+    shell: false,
+    detached: true,
+  };
+
+  try {
+    const child = spawn(pythonVenvPath, ['-c', prewarmScript], spawnOptions);
+    child.unref();
+    
+    child.on('error', (err) => {
+      console.error('Failed to pre-warm Python:', err);
+    });
+
+    child.on('close', (code) => {
+      console.log(`Python pre-warming process finished with code ${code}`);
+    });
+  } catch (error) {
+    console.error('Error initiating Python pre-warming:', error);
+  }
+}
+
 export { PYTHON_SCRIPT_PATH, pythonVenvPath };

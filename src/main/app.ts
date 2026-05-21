@@ -7,7 +7,7 @@ import { autoUpdater } from 'electron-updater';
 import { createMainWindow, getMainWindow, setAppQuitting } from './window-manager.js';
 import { setupIpcHandlers } from './ipc-handlers.js';
 import { setupAutoUpdater, checkForUpdates } from './updater.js';
-import { killPythonProcess } from './python-runner.js';
+import { killPythonProcess, preWarmPython } from './python-runner.js';
 import { cleanRunningHistorySync } from './history-manager.js';
 
 let mainWindow: BrowserWindow | null = null;
@@ -43,6 +43,7 @@ app.on('ready', async () => {
   mainWindow = createMainWindow();
   setupIpcHandlers(mainWindow);
   setupAutoUpdater(mainWindow);
+  preWarmPython();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) {
