@@ -18,6 +18,8 @@ import stat
 from typing import Optional, Dict, Any
 import urllib.parse
 
+import pyflp
+
 NOTES: list[str] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
 MAJOR_PROFILE: list[float] = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88]
@@ -248,7 +250,6 @@ def create_flp(project_path: str, project_name: str, template_path: Optional[str
     """Create FL Studio project file from template."""
     if template_path:
         if os.path.isfile(template_path) and template_path.endswith('.flp'):
-            import pyflp
             project = pyflp.parse(template_path)
             project.comments = f"Original Song: {key} | {bpm}BPM"
             output_path = os.path.join(project_path, f'{project_name}.flp')
