@@ -16,24 +16,12 @@ import subprocess
 import argparse
 import stat
 from typing import Optional, Dict, Any
-
-from pytubefix import YouTube
-from moviepy.editor import AudioFileClip
 import urllib.parse
-
-import pyflp
-import demucs.separate
-import shlex
-
-import librosa
-import numpy as np
-
-import torch
 
 NOTES: list[str] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
 
-MAJOR_PROFILE: np.ndarray = np.array([6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88])
-MINOR_PROFILE: np.ndarray = np.array([6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17])
+MAJOR_PROFILE: list[float] = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88]
+MINOR_PROFILE: list[float] = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17]
 
 
 def output_message(message: str, error: bool = False) -> None:
@@ -45,7 +33,11 @@ def output_message(message: str, error: bool = False) -> None:
 
 def check_gpu_availability() -> str:
     """Check for CUDA availability and return the device string."""
-    return "cuda" if torch.cuda.is_available() else "cpu"
+    try:
+        import torch
+        return "cuda" if torch.cuda.is_available() else "cpu"
+    except ImportError:
+        return "cpu"
 
 
 def is_video_valid(url: str) -> bool:
@@ -58,13 +50,15 @@ def is_video_valid(url: str) -> bool:
     return True
 
 
-def cosine_similarity(a: np.ndarray, b: np.ndarray) -> float:
+def cosine_similarity(a: Any, b: Any) -> float:
     """Calculate cosine similarity between two vectors."""
+    import numpy as np
     return float(np.dot(a, b) / (np.linalg.norm(a) * np.linalg.norm(b)))
 
 
-def rotate_profile(profile: np.ndarray, n: int) -> np.ndarray:
+def rotate_profile(profile: Any, n: int) -> Any:
     """Rotate the profile 'n' positions (to transpose the template)."""
+    import numpy as np
     return np.roll(profile, n)
 
 
@@ -78,6 +72,12 @@ def detect_key(audio_path: str) -> str:
     Returns:
         String with detected key and mode (e.g., "C Major").
     """
+    import librosa
+    import numpy as np
+
+    major_profile_np = np.array(MAJOR_PROFILE)
+    minor_profile_np = np.array(MINOR_PROFILE)
+
     y, sr = librosa.load(audio_path)
     chromagram = librosa.feature.chroma_cqt(y=y, sr=sr)
     chroma_mean = np.mean(chromagram, axis=1)
@@ -87,7 +87,7 @@ def detect_key(audio_path: str) -> str:
     best_mode: Optional[str] = None
 
     for i in range(12):
-        profile_rot = rotate_profile(MAJOR_PROFILE, i)
+        profile_rot = rotate_profile(major_profile_np, i)
         score = cosine_similarity(chroma_mean, profile_rot)
         if score > best_score:
             best_score = score
@@ -95,7 +95,7 @@ def detect_key(audio_path: str) -> str:
             best_mode = 'Major'
 
     for i in range(12):
-        profile_rot = rotate_profile(MINOR_PROFILE, i)
+        profile_rot = rotate_profile(minor_profile_np, i)
         score = cosine_similarity(chroma_mean, profile_rot)
         if score > best_score:
             best_score = score
@@ -119,6 +119,9 @@ def download_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str
     """
     try:
         output_message("Starting audio download...")
+
+        from pytubefix import YouTube
+        from moviepy.audio.io.AudioFileClip import AudioFileClip
 
         yt = YouTube(url)
         title = yt.title
@@ -163,6 +166,9 @@ def create_info_file(project_path: str, key: str, bpm: int, youtube_title: str) 
 
 def separate_audio(assets_path: str, audio_path: str, audio_extension: str, threads: int, device: str) -> None:
     """Separate audio into stems using Demucs."""
+    import demucs.separate
+    import shlex
+
     stems_base = os.path.join(assets_path, "stems")
     os.makedirs(stems_base, exist_ok=True)
 
@@ -242,6 +248,7 @@ def create_flp(project_path: str, project_name: str, template_path: Optional[str
     """Create FL Studio project file from template."""
     if template_path:
         if os.path.isfile(template_path) and template_path.endswith('.flp'):
+            import pyflp
             project = pyflp.parse(template_path)
             project.comments = f"Original Song: {key} | {bpm}BPM"
             output_path = os.path.join(project_path, f'{project_name}.flp')
@@ -253,6 +260,8 @@ def create_flp(project_path: str, project_name: str, template_path: Optional[str
 
 def get_song_bpm(file_path: str) -> int:
     """Estimate BPM of an audio file."""
+    import librosa
+    import numpy as np
     y, sr = librosa.load(file_path)
     onset_env = librosa.onset.onset_strength(y=y, sr=sr)
     tempo, _ = librosa.beat.beat_track(onset_envelope=onset_env, sr=sr)
@@ -279,7 +288,9 @@ def main(args: argparse.Namespace) -> int:
 
     validate_project_name(project_name)
 
-    device_to_use = check_gpu_availability()
+    device_to_use = "cpu"
+    if separate_stems:
+        device_to_use = check_gpu_availability()
 
     try:
         if os.path.exists(project_path):
