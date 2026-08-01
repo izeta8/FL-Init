@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
 import Swal from 'sweetalert2';
 import { ipcService } from './services/ipc-service';
-import { validateYoutubeURL, generateUUID } from './utils/helpers';
+import { validateSongURL, generateUUID } from './utils/helpers';
 import { OUTPUT_STATES } from '../shared/constants';
 import type { AppConfig, PythonOutputMessage, HistoryEntry, Phase, ProgressPhaseState } from '../shared/types';
 
@@ -241,9 +241,9 @@ export default function App() {
     if (!val) {
       setYoutubeWarning(null);
     } else {
-      const isValid = validateYoutubeURL(val);
+      const isValid = validateSongURL(val);
       if (!isValid) {
-        setYoutubeWarning("⚠️ The URL doesn't seem to be from Youtube!");
+        setYoutubeWarning("⚠️ The URL doesn't seem to be from Youtube or SoundCloud!");
       } else {
         setYoutubeWarning(null);
       }
@@ -382,7 +382,7 @@ export default function App() {
 
     if (!youtubeUrl.trim() || !projectLocation.trim() || !projectName.trim()) {
       const errors = [];
-      if (!youtubeUrl.trim()) errors.push('Youtube URL');
+      if (!youtubeUrl.trim()) errors.push('Song URL');
       if (!projectLocation.trim()) errors.push('Project Location');
       if (!projectName.trim()) errors.push('Project Name');
       

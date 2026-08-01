@@ -19,11 +19,11 @@
 
 ## Overview
 
-**FL-Init** is an Electron desktop application for Windows specifically built for remixers and music producers to organize and jumpstart their projects. By filling in just a few fields, the app handles the tedious process of downloading reference tracks from YouTube, running high-quality AI stem separation locally and for free, and setting up a centralized, organized FL Studio project folder with custom `.flp` templates.
+**FL-Init** is an Electron desktop application for Windows specifically built for remixers and music producers to organize and jumpstart their projects. By filling in just a few fields, the app handles the tedious process of downloading reference tracks from YouTube or SoundCloud, running high-quality AI stem separation locally and for free, and setting up a centralized, organized FL Studio project folder with custom `.flp` templates.
 
 ## Key Features
 
-*   **YouTube Audio Downloader**: Easily download reference tracks from YouTube and automatically convert them into high-quality `.wav` or `.mp3` audio.
+*   **YouTube & SoundCloud Audio Downloader**: Easily download reference tracks by pasting a YouTube or SoundCloud URL, and automatically convert them into high-quality `.wav` or `.mp3` audio.
 *   **Automatic BPM & Key Detection**: Uses `librosa` chromagram analysis and onset envelope tracking to accurately estimate the key (e.g., C Minor) and tempo (BPM) of the track.
 *   **FLP Project Templates**: Start your projects using your favorite FL Studio layout. Choose a custom `.flp` template, and the app will copy and customize it with the detected song metadata (Key and BPM written directly to the project comments) via `pyflp`.
 *   **AI Stem Separation (Demucs)**: Extract clean stems (Vocals, Drums, Bass, and Melody/Other instruments) with a single click using Facebook's Demucs. It automatically detects and leverages your GPU/CUDA acceleration if available.
@@ -47,6 +47,7 @@ Here is a preview of the FL-Init dashboard:
 *   **Storage & Configuration**: Local JSON storage (`config.json` and `history.json`) managed securely via the Electron Main Process
 *   **Python Engine**: Standalone embedded Python runtime utilizing:
     *   `pytubefix` (YouTube download)
+    *   `yt-dlp` (SoundCloud download)
     *   `librosa` (BPM & Key analysis)
     *   `pyflp` (FL Studio project manipulation)
     *   `demucs` (Stem separation)

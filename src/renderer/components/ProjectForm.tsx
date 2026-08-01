@@ -72,17 +72,17 @@ export const ProjectForm: React.FC<ProjectFormProps> = ({
   return (
     <form onSubmit={onSubmit} className="flex flex-col gap-5 max-w-2xl mx-auto w-full">
       
-      {/* Youtube URL field */}
+      {/* Song URL field (Youtube / SoundCloud) */}
       <div className="flex flex-col gap-1.5 w-full">
         <label htmlFor="youtube-url" className="text-xs font-semibold text-zinc-400 tracking-wide">
-          Youtube URL:
+          Song URL <span className="text-zinc-500 font-normal">(Youtube / SoundCloud)</span>:
         </label>
-        <input 
-          type="text" 
-          id="youtube-url" 
+        <input
+          type="text"
+          id="youtube-url"
           value={youtubeUrl}
           onChange={handleYoutubeUrlChange}
-          placeholder="Enter the URL of the song"
+          placeholder="Enter a Youtube or SoundCloud URL"
           className="bg-zinc-900/60 border border-zinc-800 rounded-md px-3.5 py-2.5 text-sm text-white focus:outline-none focus:ring-1 focus:ring-primary focus:border-primary transition-all duration-300"
         />
         {youtubeWarning && (

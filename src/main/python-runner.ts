@@ -99,10 +99,10 @@ export function runPythonScript(
     const text = rawText.toLowerCase();
     let status: OUTPUT_STATES;
 
-    const titleMatch = rawText.match(/Youtube Title:\s*(.*)/i);
+    const titleMatch = rawText.match(/(?:Track|Youtube) Title:\s*(.*)/i);
     if (titleMatch && titleMatch[1]) {
-      const youtubeTitle = titleMatch[1].trim();
-      updateHistoryEntryVideoName(UUID, youtubeTitle).catch((err) => 
+      const trackTitle = titleMatch[1].trim();
+      updateHistoryEntryVideoName(UUID, trackTitle).catch((err) =>
         console.error('Error updating history entry videoName:', err)
       );
     }
@@ -173,7 +173,7 @@ export function preWarmPython(): void {
   
   // We want to run a quick background check/import of all heavy modules
   // so Windows Defender scans them and the OS caches the DLLs in RAM.
-  const prewarmScript = 'import pyflp, numpy, librosa, torch, demucs, pytubefix, moviepy';
+  const prewarmScript = 'import pyflp, numpy, librosa, torch, demucs, pytubefix, yt_dlp, moviepy';
   
   const spawnOptions: SpawnOptions = {
     stdio: 'ignore',

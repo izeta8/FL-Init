@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-**FL-Init** is an Electron desktop application that simplifies creating FL Studio projects from YouTube songs. It automates audio downloading and project setup with customizable `.flp` templates and optional stem extraction.
+**FL-Init** is an Electron desktop application that simplifies creating FL Studio projects from YouTube or SoundCloud songs. It automates audio downloading and project setup with customizable `.flp` templates and optional stem extraction.
 
 - **Type**: Desktop Application (Electron)
 - **Node Version**: 20.x+

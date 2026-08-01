@@ -1,8 +1,8 @@
 """
-FL Init - Script to download and process YouTube videos for FL Studio projects.
+FL Init - Script to download and process songs for FL Studio projects.
 
 This script handles:
-- YouTube audio download
+- YouTube / SoundCloud audio download
 - Key and BPM detection
 - FL Studio project creation
 - Audio stem separation (optional)
@@ -15,12 +15,18 @@ import platform
 import subprocess
 import argparse
 import stat
-from typing import Optional, Dict, Any
+import contextlib
+from typing import Optional, Dict, Any, Iterator
 import urllib.parse
 
 import pyflp
 
 NOTES: list[str] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B']
+
+YOUTUBE_DOMAINS: tuple[str, ...] = ('youtube.com', 'youtu.be', 'music.youtube.com', 'm.youtube.com')
+SOUNDCLOUD_DOMAINS: tuple[str, ...] = ('soundcloud.com', 'm.soundcloud.com', 'on.soundcloud.com', 'soundcloud.app.goo.gl')
+
+TUNING_SAMPLE_SECONDS: int = 30
 
 MAJOR_PROFILE: list[float] = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88]
 MINOR_PROFILE: list[float] = [6.33, 2.68, 3.52, 5.38, 2.60, 3.53, 2.54, 4.75, 3.98, 2.69, 3.34, 3.17]
@@ -33,6 +39,33 @@ def output_message(message: str, error: bool = False) -> None:
     sys.stdout.flush()
 
 
+@contextlib.contextmanager
+def redirected_stderr(target: Any) -> Iterator[None]:
+    """
+    Temporarily point stderr somewhere else.
+
+    Third party libraries write their progress and notices to stderr, and the app flags
+    every stderr line as an error, so they are redirected while those libraries run.
+    """
+    original_stderr = sys.stderr
+    sys.stderr = target
+    try:
+        yield
+    finally:
+        sys.stderr = original_stderr
+
+
+def stderr_to_stdout() -> Any:
+    """Route stderr into stdout so its output is logged as regular progress."""
+    return redirected_stderr(sys.stdout)
+
+
+def discarded_stderr() -> Any:
+    """Drop everything written to stderr."""
+    import io
+    return redirected_stderr(io.StringIO())
+
+
 def check_gpu_availability() -> str:
     """Check for CUDA availability and return the device string."""
     try:
@@ -42,14 +75,35 @@ def check_gpu_availability() -> str:
         return "cpu"
 
 
-def is_video_valid(url: str) -> bool:
-    """Check if the provided URL is a valid YouTube URL."""
+def detect_source(url: str) -> Optional[str]:
+    """
+    Detect the platform a URL belongs to.
+
+    Args:
+        url: Song URL.
+
+    Returns:
+        'youtube', 'soundcloud' or None if the platform is not supported.
+    """
     parsed_url = urllib.parse.urlparse(url)
     if parsed_url.scheme not in ("http", "https"):
-        return False
-    if parsed_url.netloc not in ("www.youtube.com", "youtube.com", "youtu.be"):
-        return False
-    return True
+        return None
+
+    host = parsed_url.netloc.lower().split(':')[0]
+    if host.startswith('www.'):
+        host = host[4:]
+
+    if host in YOUTUBE_DOMAINS:
+        return 'youtube'
+    if host in SOUNDCLOUD_DOMAINS:
+        return 'soundcloud'
+    return None
+
+
+def sanitize_title(title: str) -> str:
+    """Strip characters that are not safe for a file name."""
+    cleaned = ''.join(char for char in title if char.isalnum() or char in " -_").strip()
+    return cleaned or "track"
 
 
 def cosine_similarity(a: Any, b: Any) -> float:
@@ -62,6 +116,26 @@ def rotate_profile(profile: Any, n: int) -> Any:
     """Rotate the profile 'n' positions (to transpose the template)."""
     import numpy as np
     return np.roll(profile, n)
+
+
+def estimate_tuning(y: Any, sr: int) -> float:
+    """
+    Estimate how far the recording is detuned, in fractions of a semitone.
+
+    librosa's own estimate_tuning() crashes the interpreter here: it relies on
+    piptrack(), which segfaults with the pinned librosa 0.11 / numpy 2.1 combination.
+    yin() gives the same answer without touching that code path.
+    """
+    import librosa
+
+    try:
+        # A fragment is enough, and keeps this off the critical path for long tracks.
+        segment = y[:sr * TUNING_SAMPLE_SECONDS]
+        f0 = librosa.yin(segment, fmin=librosa.note_to_hz('C2'), fmax=librosa.note_to_hz('C7'))
+        return float(librosa.pitch_tuning(f0))
+    except Exception as e:
+        output_message(f"Could not estimate tuning, assuming standard pitch: {e}")
+        return 0.0
 
 
 def detect_key(audio_path: str) -> str:
@@ -81,7 +155,7 @@ def detect_key(audio_path: str) -> str:
     minor_profile_np = np.array(MINOR_PROFILE)
 
     y, sr = librosa.load(audio_path)
-    chromagram = librosa.feature.chroma_cqt(y=y, sr=sr)
+    chromagram = librosa.feature.chroma_cqt(y=y, sr=sr, tuning=estimate_tuning(y, sr))
     chroma_mean = np.mean(chromagram, axis=1)
 
     best_score = -np.inf
@@ -107,58 +181,198 @@ def detect_key(audio_path: str) -> str:
     return f"{best_key} {best_mode} (Score: {round(best_score, 2)})"
 
 
-def download_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str, str]:
+def convert_to_audio_format(source_file: str, assets_path: str, title: str, audio_extension: str) -> str:
     """
-    Download audio from YouTube and convert to specified format.
+    Convert a downloaded media file to the requested audio format and remove the source.
 
     Args:
-        url: YouTube video URL.
+        source_file: Path to the downloaded file.
+        assets_path: Directory where the converted audio is written.
+        title: File name (without extension) of the output.
+        audio_extension: Output format (mp3/wav).
+
+    Returns:
+        Path to the converted audio file.
+    """
+    from moviepy.audio.io.AudioFileClip import AudioFileClip
+
+    audio_out_path = os.path.join(assets_path, f"{title}.{audio_extension}")
+
+    with stderr_to_stdout():
+        audio_clip = AudioFileClip(source_file)
+        audio_clip.write_audiofile(audio_out_path)
+        audio_clip.close()
+
+    os.remove(source_file)
+
+    return audio_out_path
+
+
+def download_youtube_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str, str]:
+    """Download audio from YouTube and convert it to the requested format."""
+    from pytubefix import YouTube
+
+    yt = YouTube(url)
+    title = sanitize_title(yt.title)
+    output_message(f"Track Title: {title}")
+
+    os.makedirs(assets_path, exist_ok=True)
+
+    audio_stream = yt.streams.filter(only_audio=True).first()
+    audio_file_path = audio_stream.download(output_path=assets_path, filename=f"{title}.mp4")
+    audio_out_path = convert_to_audio_format(audio_file_path, assets_path, title, audio_extension)
+
+    return {"audio_path": audio_out_path, "assets_path": assets_path, "track_title": title}
+
+
+class YtDlpLogger:
+    """Route yt-dlp messages through the script output channels."""
+
+    def debug(self, msg: str) -> None:
+        pass
+
+    def info(self, msg: str) -> None:
+        pass
+
+    def warning(self, msg: str) -> None:
+        # Deprecation notices are aimed at the developer, not at the user creating a project.
+        if msg.startswith("Deprecated Feature"):
+            return
+        output_message(f"Warning: {msg}")
+
+    def error(self, msg: str) -> None:
+        output_message(msg, error=True)
+
+
+def build_download_progress_hook() -> Any:
+    """Build a yt-dlp progress hook that reports the download percentage."""
+    last_reported = {"percent": -1}
+
+    def hook(status: Dict[str, Any]) -> None:
+        if status.get("status") == "downloading":
+            total = status.get("total_bytes") or status.get("total_bytes_estimate")
+            if not total:
+                return
+            percent = int(status.get("downloaded_bytes", 0) * 100 / total)
+            if percent >= last_reported["percent"] + 5:
+                last_reported["percent"] = percent
+                output_message(f"Downloading from SoundCloud... {percent}%")
+        elif status.get("status") == "finished":
+            output_message("Download finished. Converting the audio...")
+
+    return hook
+
+
+def build_ydl(ydl_opts: Dict[str, Any]) -> Any:
+    """
+    Build a YoutubeDL instance.
+
+    yt-dlp captures the stderr stream on construction and uses it for notices we cannot
+    act on (such as the Python version deprecation), so it is pointed at a throwaway
+    buffer. Warnings and errors still reach the app through the configured logger.
+    """
+    from yt_dlp import YoutubeDL
+    with discarded_stderr():
+        return YoutubeDL(ydl_opts)
+
+
+def resolve_downloaded_file(ydl: Any, info: Dict[str, Any]) -> str:
+    """Get the path of the file yt-dlp just wrote."""
+    requested = info.get("requested_downloads") or []
+    if requested and requested[0].get("filepath"):
+        return requested[0]["filepath"]
+    return ydl.prepare_filename(info)
+
+
+def download_soundcloud_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str, str]:
+    """Download audio from SoundCloud with yt-dlp and convert it to the requested format."""
+    os.makedirs(assets_path, exist_ok=True)
+    # Downloaded into its own folder so the source file can never collide with the output.
+    source_path = os.path.join(assets_path, "_source")
+    os.makedirs(source_path, exist_ok=True)
+
+    ydl_opts: Dict[str, Any] = {
+        "format": "bestaudio/best",
+        "noplaylist": True,
+        # The file is re-encoded with moviepy right after, and the fixup step would only
+        # warn about the missing ffprobe binary (imageio-ffmpeg only ships ffmpeg).
+        "fixup": "never",
+        "quiet": True,
+        "no_warnings": True,
+        "noprogress": True,
+        "logger": YtDlpLogger(),
+        "progress_hooks": [build_download_progress_hook()],
+    }
+
+    # moviepy ships ffmpeg through imageio-ffmpeg, so reuse it instead of requiring a system install.
+    try:
+        import imageio_ffmpeg
+        ydl_opts["ffmpeg_location"] = imageio_ffmpeg.get_ffmpeg_exe()
+    except Exception:
+        pass
+
+    try:
+        with build_ydl(dict(ydl_opts, skip_download=True)) as ydl:
+            probe_info = ydl.extract_info(url, download=False)
+
+        if not probe_info:
+            raise ValueError("Could not read the SoundCloud track. Check that the link is public and correct.")
+        if probe_info.get("entries") is not None:
+            raise ValueError("SoundCloud playlists/sets are not supported. Please provide a single track URL.")
+
+        title = sanitize_title(probe_info.get("title", ""))
+        output_message(f"Track Title: {title}")
+
+        ydl_opts["outtmpl"] = os.path.join(source_path, f"{title}.%(ext)s")
+        with build_ydl(ydl_opts) as ydl:
+            info = ydl.extract_info(url, download=True)
+            downloaded_file = resolve_downloaded_file(ydl, info)
+
+        audio_out_path = convert_to_audio_format(downloaded_file, assets_path, title, audio_extension)
+
+        return {"audio_path": audio_out_path, "assets_path": assets_path, "track_title": title}
+
+    finally:
+        shutil.rmtree(source_path, ignore_errors=True)
+
+
+def download_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str, str]:
+    """
+    Download audio from a supported platform and convert to the specified format.
+
+    Args:
+        url: YouTube or SoundCloud URL.
         assets_path: Directory to save the audio.
         audio_extension: Output format (mp3/wav).
 
     Returns:
-        Dictionary with audio_path and assets_path.
+        Dictionary with audio_path, assets_path and track_title.
     """
+    source = detect_source(url)
+    if source is None:
+        raise ValueError("The URL must be a valid YouTube or SoundCloud link.")
+
     try:
-        output_message("Starting audio download...")
+        output_message(f"Starting audio download from {'SoundCloud' if source == 'soundcloud' else 'YouTube'}...")
 
-        from pytubefix import YouTube
-        from moviepy.audio.io.AudioFileClip import AudioFileClip
+        if source == 'soundcloud':
+            return download_soundcloud_audio(url, assets_path, audio_extension)
+        return download_youtube_audio(url, assets_path, audio_extension)
 
-        yt = YouTube(url)
-        title = yt.title
-        title = ''.join(char for char in title if char.isalnum() or char in " -_")
-        output_message(f"Youtube Title: {title}")
-
-        os.makedirs(assets_path, exist_ok=True)
-
-        audio_stream = yt.streams.filter(only_audio=True).first()
-        audio_file_path = audio_stream.download(output_path=assets_path, filename=f"{title}.mp4")
-        audio_out_path = os.path.join(assets_path, f"{title}.{audio_extension}")
-
-        original_stderr = sys.stderr
-        sys.stderr = sys.stdout
-
-        audio_clip = AudioFileClip(audio_file_path)
-        audio_clip.write_audiofile(audio_out_path)
-        audio_clip.close()
-
-        sys.stderr = original_stderr
-        os.remove(audio_file_path)
-
-        return {"audio_path": audio_out_path, "assets_path": assets_path, "youtube_title": title}
-
+    except ValueError:
+        raise
     except Exception as e:
         output_message(f"Error downloading audio: {str(e)}", error=True)
         raise
 
 
-def create_info_file(project_path: str, key: str, bpm: int, youtube_title: str) -> None:
+def create_info_file(project_path: str, key: str, bpm: int, track_title: str, source: str) -> None:
     """Create a text file with original song information."""
     try:
         info_path = os.path.join(project_path, "Original Song Info.txt")
-        with open(info_path, "w") as file:
-            file.write(f"Youtube title: {youtube_title}\n")
+        with open(info_path, "w", encoding="utf-8") as file:
+            file.write(f"Source: {'SoundCloud' if source == 'soundcloud' else 'Youtube'}\n")
+            file.write(f"Title: {track_title}\n")
             file.write("Original Song Info: \n")
             file.write(f"  -> Key: {key}\n")
             file.write(f"  -> BPM: {str(bpm)}\n")
@@ -289,6 +503,11 @@ def main(args: argparse.Namespace) -> int:
 
     validate_project_name(project_name)
 
+    source = detect_source(url)
+    if source is None:
+        output_message("Validation error: The URL must be a valid YouTube or SoundCloud link.", error=True)
+        return 1
+
     device_to_use = "cpu"
     if separate_stems:
         device_to_use = check_gpu_availability()
@@ -300,12 +519,12 @@ def main(args: argparse.Namespace) -> int:
         assets_path = os.path.join(project_path, 'assets')
         result = download_audio(url, assets_path, audio_extension)
         audio_path = result["audio_path"]
-        youtube_title = result.get("youtube_title", "")
+        track_title = result.get("track_title", "")
 
         key = detect_key(audio_path)
         bpm = get_song_bpm(audio_path)
 
-        create_info_file(project_path, key, bpm, youtube_title)
+        create_info_file(project_path, key, bpm, track_title, source)
 
         create_flp(project_path, project_name, template_path, key, bpm)
 
@@ -327,9 +546,9 @@ def main(args: argparse.Namespace) -> int:
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description="Script to download and process YouTube videos")
+    parser = argparse.ArgumentParser(description="Script to download and process YouTube/SoundCloud songs")
     parser.add_argument("project_location", help="Destination directory path")
-    parser.add_argument("url", help="YouTube video URL")
+    parser.add_argument("url", help="YouTube or SoundCloud song URL")
     parser.add_argument("project_name", help="Project name, used as the directory name")
     parser.add_argument("--separate-stems", action='store_true', help="Separate audio stems")
     parser.add_argument("--template-path", help="Path to the .flp template")

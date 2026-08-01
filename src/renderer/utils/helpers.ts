@@ -26,8 +26,20 @@ export function showSuccess(message: string): void {
 
 export function validateYoutubeURL(url: string): boolean {
   if (!url) return false;
-  const regExp = /^(?:https?:\/\/)?(?:www\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
+  const regExp = /^(?:https?:\/\/)?(?:www\.|m\.|music\.)?(?:youtube\.com\/(?:[^\/\n\s]+\/\S+\/|(?:v|e(?:mbed)?)\/|.*[?&]v=)|youtu\.be\/)([a-zA-Z0-9_-]{11})/;
   return regExp.test(url);
+}
+
+export function validateSoundcloudURL(url: string): boolean {
+  if (!url) return false;
+  // Track pages (soundcloud.com/artist/track) and shortened share links (on.soundcloud.com/xxxx).
+  const trackRegExp = /^(?:https?:\/\/)?(?:www\.|m\.)?soundcloud\.com\/[a-zA-Z0-9_-]+\/[a-zA-Z0-9_-]+/;
+  const shortRegExp = /^(?:https?:\/\/)?(?:on\.soundcloud\.com|soundcloud\.app\.goo\.gl)\/\S+/;
+  return trackRegExp.test(url) || shortRegExp.test(url);
+}
+
+export function validateSongURL(url: string): boolean {
+  return validateYoutubeURL(url) || validateSoundcloudURL(url);
 }
 
 export function generateUUID(): string {
