@@ -46,8 +46,7 @@ Here is a preview of the FL-Init dashboard:
 *   **Renderer Process (Frontend)**: React 19, TypeScript, Webpack 5, Tailwind CSS, SweetAlert2
 *   **Storage & Configuration**: Local JSON storage (`config.json` and `history.json`) managed securely via the Electron Main Process
 *   **Python Engine**: Standalone embedded Python runtime utilizing:
-    *   `pytubefix` (YouTube download)
-    *   `yt-dlp` (SoundCloud download)
+    *   `yt-dlp` (YouTube & SoundCloud download)
     *   `librosa` (BPM & Key analysis)
     *   `pyflp` (FL Studio project manipulation)
     *   `demucs` (Stem separation)

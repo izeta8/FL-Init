@@ -173,7 +173,7 @@ export function preWarmPython(): void {
   
   // We want to run a quick background check/import of all heavy modules
   // so Windows Defender scans them and the OS caches the DLLs in RAM.
-  const prewarmScript = 'import pyflp, numpy, librosa, torch, demucs, pytubefix, yt_dlp, moviepy';
+  const prewarmScript = 'import pyflp, numpy, librosa, torch, demucs, yt_dlp, moviepy';
   
   const spawnOptions: SpawnOptions = {
     stdio: 'ignore',

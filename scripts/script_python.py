@@ -26,6 +26,8 @@ NOTES: list[str] = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 
 YOUTUBE_DOMAINS: tuple[str, ...] = ('youtube.com', 'youtu.be', 'music.youtube.com', 'm.youtube.com')
 SOUNDCLOUD_DOMAINS: tuple[str, ...] = ('soundcloud.com', 'm.soundcloud.com', 'on.soundcloud.com', 'soundcloud.app.goo.gl')
 
+SOURCE_LABELS: dict[str, str] = {'youtube': 'YouTube', 'soundcloud': 'SoundCloud'}
+
 TUNING_SAMPLE_SECONDS: int = 30
 
 MAJOR_PROFILE: list[float] = [6.35, 2.23, 3.48, 2.33, 4.38, 4.09, 2.52, 5.19, 2.39, 3.66, 2.29, 2.88]
@@ -208,23 +210,6 @@ def convert_to_audio_format(source_file: str, assets_path: str, title: str, audi
     return audio_out_path
 
 
-def download_youtube_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str, str]:
-    """Download audio from YouTube and convert it to the requested format."""
-    from pytubefix import YouTube
-
-    yt = YouTube(url)
-    title = sanitize_title(yt.title)
-    output_message(f"Track Title: {title}")
-
-    os.makedirs(assets_path, exist_ok=True)
-
-    audio_stream = yt.streams.filter(only_audio=True).first()
-    audio_file_path = audio_stream.download(output_path=assets_path, filename=f"{title}.mp4")
-    audio_out_path = convert_to_audio_format(audio_file_path, assets_path, title, audio_extension)
-
-    return {"audio_path": audio_out_path, "assets_path": assets_path, "track_title": title}
-
-
 class YtDlpLogger:
     """Route yt-dlp messages through the script output channels."""
 
@@ -238,13 +223,17 @@ class YtDlpLogger:
         # Deprecation notices are aimed at the developer, not at the user creating a project.
         if msg.startswith("Deprecated Feature"):
             return
+        # The bundled runtime ships no JS engine, so this notice is not actionable for the
+        # user; yt-dlp still resolves YouTube audio through the clients that need no JS.
+        if "No supported JavaScript runtime" in msg:
+            return
         output_message(f"Warning: {msg}")
 
     def error(self, msg: str) -> None:
         output_message(msg, error=True)
 
 
-def build_download_progress_hook() -> Any:
+def build_download_progress_hook(source_label: str) -> Any:
     """Build a yt-dlp progress hook that reports the download percentage."""
     last_reported = {"percent": -1}
 
@@ -256,7 +245,7 @@ def build_download_progress_hook() -> Any:
             percent = int(status.get("downloaded_bytes", 0) * 100 / total)
             if percent >= last_reported["percent"] + 5:
                 last_reported["percent"] = percent
-                output_message(f"Downloading from SoundCloud... {percent}%")
+                output_message(f"Downloading from {source_label}... {percent}%")
         elif status.get("status") == "finished":
             output_message("Download finished. Converting the audio...")
 
@@ -284,8 +273,10 @@ def resolve_downloaded_file(ydl: Any, info: Dict[str, Any]) -> str:
     return ydl.prepare_filename(info)
 
 
-def download_soundcloud_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str, str]:
-    """Download audio from SoundCloud with yt-dlp and convert it to the requested format."""
+def download_track_audio(url: str, assets_path: str, audio_extension: str, source: str) -> Dict[str, str]:
+    """Download audio with yt-dlp and convert it to the requested format."""
+    source_label = SOURCE_LABELS[source]
+
     os.makedirs(assets_path, exist_ok=True)
     # Downloaded into its own folder so the source file can never collide with the output.
     source_path = os.path.join(assets_path, "_source")
@@ -301,7 +292,7 @@ def download_soundcloud_audio(url: str, assets_path: str, audio_extension: str) 
         "no_warnings": True,
         "noprogress": True,
         "logger": YtDlpLogger(),
-        "progress_hooks": [build_download_progress_hook()],
+        "progress_hooks": [build_download_progress_hook(source_label)],
     }
 
     # moviepy ships ffmpeg through imageio-ffmpeg, so reuse it instead of requiring a system install.
@@ -316,9 +307,9 @@ def download_soundcloud_audio(url: str, assets_path: str, audio_extension: str) 
             probe_info = ydl.extract_info(url, download=False)
 
         if not probe_info:
-            raise ValueError("Could not read the SoundCloud track. Check that the link is public and correct.")
+            raise ValueError(f"Could not read the {source_label} track. Check that the link is public and correct.")
         if probe_info.get("entries") is not None:
-            raise ValueError("SoundCloud playlists/sets are not supported. Please provide a single track URL.")
+            raise ValueError(f"{source_label} playlists are not supported. Please provide a single track URL.")
 
         title = sanitize_title(probe_info.get("title", ""))
         output_message(f"Track Title: {title}")
@@ -353,11 +344,8 @@ def download_audio(url: str, assets_path: str, audio_extension: str) -> Dict[str
         raise ValueError("The URL must be a valid YouTube or SoundCloud link.")
 
     try:
-        output_message(f"Starting audio download from {'SoundCloud' if source == 'soundcloud' else 'YouTube'}...")
-
-        if source == 'soundcloud':
-            return download_soundcloud_audio(url, assets_path, audio_extension)
-        return download_youtube_audio(url, assets_path, audio_extension)
+        output_message(f"Starting audio download from {SOURCE_LABELS[source]}...")
+        return download_track_audio(url, assets_path, audio_extension, source)
 
     except ValueError:
         raise
